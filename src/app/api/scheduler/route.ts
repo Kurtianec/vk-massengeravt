@@ -124,8 +124,8 @@ function shouldSendNow(
 
   switch (task.scheduleType) {
     case 'once': {
-      // Send if the scheduled time has passed (with 2-minute tolerance)
-      return now >= scheduled && now.getTime() - scheduled.getTime() < 120000;
+      // Send if the scheduled time has passed (with 5-minute tolerance for multi-chat offset)
+      return now >= scheduled && now.getTime() - scheduled.getTime() < 300000;
     }
 
     case 'interval': {

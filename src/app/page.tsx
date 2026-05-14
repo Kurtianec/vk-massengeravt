@@ -148,8 +148,8 @@ export default function Home() {
   const [logs, setLogs] = useState<SendLogEntry[]>([]);
   const [activeTab, setActiveTab] = useState('connect');
 
-  // New task form
-  const [newTaskChatId, setNewTaskChatId] = useState('');
+  // New task form — multi-chat support
+  const [selectedChatIdsForTask, setSelectedChatIdsForTask] = useState<string[]>([]);
   const [newTaskMessage, setNewTaskMessage] = useState('');
   const [newTaskScheduleType, setNewTaskScheduleType] = useState('once');
   const [newTaskScheduledAt, setNewTaskScheduledAt] = useState('');
@@ -421,20 +421,30 @@ export default function Home() {
   };
 
   const handleCreateTask = async () => {
-    if (!newTaskChatId || !newTaskMessage || !newTaskScheduledAt) {
-      toast({ title: 'Ошибка', description: 'Заполните все обязательные поля', variant: 'destructive' });
+    if (selectedChatIdsForTask.length === 0 || !newTaskMessage || !newTaskScheduledAt) {
+      toast({ title: 'Ошибка', description: 'Заполните все обязательные поля и выберите чаты', variant: 'destructive' });
       return;
     }
     setCreating(true);
     try {
+      // TIMEZONE FIX: explicitly parse datetime-local as LOCAL time
+      // new Date("YYYY-MM-DDTHH:mm") can be interpreted as UTC in some environments
+      // So we manually construct a local Date to avoid any ambiguity
+      const localScheduledAt = (() => {
+        const [datePart, timePart] = newTaskScheduledAt.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        return new Date(year, month - 1, day, hours, minutes).toISOString();
+      })();
+
       const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chatId: newTaskChatId,
+          chatIds: selectedChatIdsForTask,
           messageText: newTaskMessage,
           scheduleType: newTaskScheduleType,
-          scheduledAt: newTaskScheduledAt,
+          scheduledAt: localScheduledAt,
           dayOfWeek: newTaskScheduleType === 'weekly' ? parseInt(newTaskDayOfWeek) : null,
           dayOfMonth: newTaskScheduleType === 'monthly' ? parseInt(newTaskDayOfMonth) : null,
           intervalMinutes: newTaskScheduleType === 'interval' ? parseInt(newTaskInterval) : null,
@@ -443,9 +453,11 @@ export default function Home() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast({ title: 'Задача создана', description: 'Сообщение запланировано к отправке' });
+        const count = data.count || data.tasks?.length || 1;
+        const chatWord = count === 1 ? 'чат' : count < 5 ? 'чата' : 'чатов';
+        toast({ title: 'Задачи созданы', description: `${count} задач для ${count} ${chatWord} запланировано (интервал 15 сек)` });
         setCreateDialogOpen(false);
-        setNewTaskChatId('');
+        setSelectedChatIdsForTask([]);
         setNewTaskMessage('');
         setNewTaskScheduleType('once');
         setNewTaskScheduledAt('');
@@ -517,10 +529,34 @@ export default function Home() {
     ? chats.filter(c => c.title.toLowerCase().includes(chatSearch.toLowerCase()))
     : chats;
 
+  // TIMEZONE FIX: getMinDateTime returns LOCAL time for the datetime picker
   const getMinDateTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 5);
-    return now.toISOString().slice(0, 16);
+    const offset = now.getTimezoneOffset();
+    const local = new Date(now.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
+  };
+
+  const toggleChatInTask = (chatId: string) => {
+    setSelectedChatIdsForTask(prev =>
+      prev.includes(chatId)
+        ? prev.filter(id => id !== chatId)
+        : [...prev, chatId]
+    );
+  };
+
+  const selectAllChatsForTask = () => {
+    if (selectedChatIdsForTask.length === chats.length) {
+      setSelectedChatIdsForTask([]);
+    } else {
+      setSelectedChatIdsForTask(chats.map(c => c.id));
+    }
+  };
+
+  const openCreateDialog = (preselectedChatIds?: string[]) => {
+    setSelectedChatIdsForTask(preselectedChatIds || selectedChats.map(c => c.id));
+    setCreateDialogOpen(true);
   };
 
   const statsCards = [
@@ -846,13 +882,24 @@ export default function Home() {
               </CardHeader>
               <CardContent className="flex-1 min-h-0 flex flex-col pt-0">
                 {chats.length > 0 && (
-                  <div className="mb-3 flex-shrink-0">
+                  <div className="mb-3 flex-shrink-0 space-y-2">
                     <Input
                       placeholder="Поиск чатов..."
                       value={chatSearch}
                       onChange={e => setChatSearch(e.target.value)}
                       className="h-9 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl"
                     />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const allSelected = selectedChats.length === chats.length;
+                        chats.forEach(c => toggleChatSelection(c.id, !allSelected));
+                      }}
+                      className="w-full border-[#0077FF]/30 text-[#0077FF] hover:bg-[#0077FF]/5 rounded-xl h-8 text-xs"
+                    >
+                      {selectedChats.length === chats.length ? 'Снять выделение со всех' : 'Выбрать все чаты'}
+                    </Button>
                   </div>
                 )}
 
@@ -919,7 +966,7 @@ export default function Home() {
                       <span className="font-medium">Выбрано {selectedChats.length} чат{selectedChats.length === 1 ? '' : selectedChats.length < 5 ? 'а' : 'ов'}</span>
                     </div>
                     <Button
-                      onClick={() => { setActiveTab('tasks'); setCreateDialogOpen(true); }}
+                      onClick={() => openCreateDialog()}
                       className="bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl h-9"
                     >
                       <Send className="w-4 h-4 mr-2" />
@@ -971,25 +1018,51 @@ export default function Home() {
                       </DialogHeader>
                       <div className="space-y-4 py-4 overflow-y-auto flex-1 min-h-0">
                         <div className="space-y-2">
-                          <Label className="text-[#222]">Чат *</Label>
-                          <Select value={newTaskChatId} onValueChange={setNewTaskChatId}>
-                            <SelectTrigger className="border-[#dce1e6] focus:border-[#0077FF] rounded-xl">
-                              <SelectValue placeholder="Выберите чат" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {selectedChats.length === 0 ? (
-                                <div className="p-2 text-sm text-[#818c99] text-center">
-                                  Сначала выберите чаты на вкладке &quot;Чаты&quot;
-                                </div>
-                              ) : (
-                                selectedChats.map(chat => (
-                                  <SelectItem key={chat.id} value={chat.id}>
-                                    {chat.title}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[#222]">Чаты * ({selectedChatIdsForTask.length} выбрано)</Label>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={selectAllChatsForTask}
+                              className="h-7 text-xs text-[#0077FF] hover:text-[#0066dd] px-2"
+                            >
+                              {selectedChatIdsForTask.length === chats.length ? 'Снять все' : 'Все чаты'}
+                            </Button>
+                          </div>
+                          <div className="border border-[#dce1e6] rounded-xl max-h-40 overflow-y-auto">
+                            {chats.length === 0 ? (
+                              <div className="p-3 text-sm text-[#818c99] text-center">
+                                Сначала загрузите чаты
+                              </div>
+                            ) : (
+                              chats.map(chat => (
+                                <label
+                                  key={chat.id}
+                                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors border-b border-[#dce1e6]/50 last:border-0 ${
+                                    selectedChatIdsForTask.includes(chat.id) ? 'bg-[#e1f0ff]' : 'hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedChatIdsForTask.includes(chat.id)}
+                                    onChange={() => toggleChatInTask(chat.id)}
+                                    className="w-4 h-4 rounded border-[#dce1e6] text-[#0077FF] focus:ring-[#0077FF]/20"
+                                  />
+                                  <span className="text-sm text-[#222] truncate flex-1">{chat.title}</span>
+                                  <span className="text-xs text-[#818c99]">
+                                    {chat.chatType === 'group' ? 'Беседа' : 'ЛС'}
+                                  </span>
+                                </label>
+                              ))
+                            )}
+                          </div>
+                          {selectedChatIdsForTask.length > 1 && (
+                            <p className="text-xs text-[#0077FF] flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Отправка с интервалом 15 сек между чатами
+                            </p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[#222]">Текст сообщения *</Label>
