@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 
-const SEND_INTERVAL_SECONDS = 15; // 15 sec between sends to avoid VK anti-spam
+const SEND_INTERVAL_SECONDS = 10; // 10 sec between sends to avoid VK anti-spam
 
 export async function GET(request: NextRequest) {
   try {

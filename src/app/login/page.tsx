@@ -46,23 +46,23 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: 'linear-gradient(180deg, #edeef0 0%, #ffffff 100%)' }}
+      style={{ background: 'linear-gradient(180deg, #e6e9f0 0%, #ffffff 100%)' }}
     >
       {/* VK Logo */}
       <div className="mb-8 flex flex-col items-center">
         <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-          <rect width="56" height="56" rx="12" fill="#0077FF"/>
+          <rect width="56" height="56" rx="12" fill="#0059D6"/>
           <path d="M14 20h5c.6 0 1 .4 1.2.8.8 2 2.4 5.6 4 6.4.6.4.8 0 .8-.6v-4c0-1.4-.6-2.6-.6-2.6s-.4-.6-1-.6c-.4 0-.6-.4-.4-.6.2-.4.8-.8 1.6-.8h4c.8 0 1.4.6 1.4 1.4v6c0 .6.4 1 .8.6 1.2-.8 3-4 4.2-6.6.2-.6.6-.8 1-.8h4.4c.8 0 1.4.8 1 1.6-1.6 3-4.2 7-5.4 8.2-.6.6-.4 1.2 0 1.8 1.4 1.4 4 4.2 5 5.6.4.6.2 1.4-.6 1.4h-5c-.6 0-1-.2-1.4-.6-1-1-2.6-2.8-3.6-2.8-.4 0-.8.2-.8 1v1.4c0 .6-.4 1-1 1h-3c-5 0-9-7-11.6-13-.4-.6 0-1.2.6-1.2z" fill="white"/>
         </svg>
-        <h1 className="mt-4 text-2xl font-bold text-[#222]">VK Messages</h1>
-        <p className="mt-1 text-sm text-[#818c99]">Автоматическая отправка сообщений ВКонтакте</p>
+        <h1 className="mt-4 text-2xl font-bold text-[#1a1a2e]">VK Messages</h1>
+        <p className="mt-1 text-sm text-[#6b7280]">Автоматическая отправка сообщений ВКонтакте</p>
       </div>
 
       {/* Auth Card */}
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg border border-[#dce1e6] overflow-hidden">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg border border-[#c8d0da] overflow-hidden">
         {/* Card Header */}
         <div className="px-6 pt-6 pb-2">
-          <h2 className="text-xl font-bold text-[#222] text-center">
+          <h2 className="text-xl font-bold text-[#1a1a2e] text-center">
             {mode === 'login' ? 'Вход' : 'Регистрация'}
           </h2>
         </div>
@@ -71,20 +71,20 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="px-6 pb-6 pt-2 space-y-4">
           {mode === 'register' && (
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[#222] text-sm font-medium">Имя</Label>
+              <Label htmlFor="name" className="text-[#1a1a2e] text-sm font-medium">Имя</Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="Ваше имя"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="h-11 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl text-[#222] placeholder:text-[#818c99]"
+                className="h-11 border-[#c8d0da] focus:border-[#0059D6] focus:ring-[#0059D6]/20 rounded-xl text-[#1a1a2e] placeholder:text-[#6b7280]"
               />
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-[#222] text-sm font-medium">Email</Label>
+            <Label htmlFor="email" className="text-[#1a1a2e] text-sm font-medium">Email</Label>
             <Input
               id="email"
               type="email"
@@ -92,12 +92,12 @@ export default function LoginPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="h-11 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl text-[#222] placeholder:text-[#818c99]"
+              className="h-11 border-[#c8d0da] focus:border-[#0059D6] focus:ring-[#0059D6]/20 rounded-xl text-[#1a1a2e] placeholder:text-[#6b7280]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-[#222] text-sm font-medium">Пароль</Label>
+            <Label htmlFor="password" className="text-[#1a1a2e] text-sm font-medium">Пароль</Label>
             <Input
               id="password"
               type="password"
@@ -106,7 +106,7 @@ export default function LoginPage() {
               onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
-              className="h-11 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl text-[#222] placeholder:text-[#818c99]"
+              className="h-11 border-[#c8d0da] focus:border-[#0059D6] focus:ring-[#0059D6]/20 rounded-xl text-[#1a1a2e] placeholder:text-[#6b7280]"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl text-base"
+            className="w-full h-11 bg-[#0059D6] hover:bg-[#0047B3] text-white font-semibold rounded-xl text-base"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -137,14 +137,14 @@ export default function LoginPage() {
 
         {/* Switch Mode */}
         <div className="px-6 pb-6 pt-0">
-          <div className="border-t border-[#dce1e6] pt-4 text-center">
-            <p className="text-sm text-[#818c99]">
+          <div className="border-t border-[#c8d0da] pt-4 text-center">
+            <p className="text-sm text-[#6b7280]">
               {mode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}
               {' '}
               <button
                 type="button"
                 onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
-                className="text-[#0077FF] hover:text-[#0066dd] font-semibold hover:underline"
+                className="text-[#0059D6] hover:text-[#0047B3] font-semibold hover:underline"
               >
                 {mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
               </button>
@@ -154,7 +154,7 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <p className="mt-6 text-xs text-[#818c99]">
+      <p className="mt-6 text-xs text-[#6b7280]">
         VK Messages © {new Date().getFullYear()}
       </p>
     </div>

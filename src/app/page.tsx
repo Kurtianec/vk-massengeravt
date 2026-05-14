@@ -455,7 +455,7 @@ export default function Home() {
       if (res.ok) {
         const count = data.count || data.tasks?.length || 1;
         const chatWord = count === 1 ? 'чат' : count < 5 ? 'чата' : 'чатов';
-        toast({ title: 'Задачи созданы', description: `${count} задач для ${count} ${chatWord} запланировано (интервал 15 сек)` });
+        toast({ title: 'Задачи созданы', description: `${count} задач для ${count} ${chatWord} запланировано (интервал 10 сек)` });
         setCreateDialogOpen(false);
         setSelectedChatIdsForTask([]);
         setNewTaskMessage('');
@@ -569,13 +569,13 @@ export default function Home() {
   // Loading state while checking auth
   if (authLoading) {
     return (
-      <div className="h-screen bg-[#edeef0] flex items-center justify-center">
+      <div className="h-screen bg-[#e6e9f0] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <svg className="animate-spin h-8 w-8 text-[#0077FF]" viewBox="0 0 24 24">
+          <svg className="animate-spin h-8 w-8 text-[#0059D6]" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
           </svg>
-          <p className="text-sm text-[#818c99]">Загрузка...</p>
+          <p className="text-sm text-[#6b7280]">Загрузка...</p>
         </div>
       </div>
     );
@@ -586,9 +586,9 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen bg-[#edeef0] flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#e6e9f0] flex flex-col overflow-hidden">
       {/* Header — VK Style */}
-      <header className="bg-[#0077FF] z-50 shadow-md flex-shrink-0">
+      <header className="bg-[#0059D6] z-50 shadow-lg flex-shrink-0">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -634,27 +634,27 @@ export default function Home() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-[#222]">{authUser.name || authUser.email.split('@')[0]}</p>
-                  <p className="text-xs text-[#818c99]">{authUser.email}</p>
+                  <p className="text-sm font-medium text-[#1a1a2e]">{authUser.name || authUser.email.split('@')[0]}</p>
+                  <p className="text-xs text-[#6b7280]">{authUser.email}</p>
                 </div>
                 {connected && connection && (
                   <>
                     <DropdownMenuSeparator />
                     <div className="px-2 py-1.5 flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                      <span className="text-xs text-[#818c99]">ВК: {connection.userName}</span>
+                      <span className="text-xs text-[#6b7280]">ВК: {connection.userName}</span>
                     </div>
                   </>
                 )}
                 <DropdownMenuSeparator />
                 {authUser.role === 'admin' && (
-                  <DropdownMenuItem onClick={() => window.location.href = '/admin'} className="text-[#0077FF] focus:text-[#0077FF] cursor-pointer">
+                  <DropdownMenuItem onClick={() => window.location.href = '/admin'} className="text-[#0059D6] focus:text-[#0059D6] cursor-pointer">
                     <Shield className="w-4 h-4 mr-2" />
                     Админ-панель
                   </DropdownMenuItem>
                 )}
                 {connected && (
-                  <DropdownMenuItem onClick={handleDisconnect} className="text-[#818c99] focus:text-red-600 cursor-pointer">
+                  <DropdownMenuItem onClick={handleDisconnect} className="text-[#6b7280] focus:text-red-600 cursor-pointer">
                     <LogOut className="w-4 h-4 mr-2" />
                     Отключить ВК
                   </DropdownMenuItem>
@@ -675,13 +675,13 @@ export default function Home() {
         {connected && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3 flex-shrink-0">
             {statsCards.map((s, i) => (
-              <div key={i} className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#dce1e6]/50">
-                <div className="w-9 h-9 rounded-lg bg-[#0077FF]/10 flex items-center justify-center">
-                  <s.icon className="w-4 h-4 text-[#0077FF]" />
+              <div key={i} className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#c8d0da]/50">
+                <div className="w-9 h-9 rounded-lg bg-[#0059D6]/15 flex items-center justify-center">
+                  <s.icon className="w-4 h-4 text-[#0059D6]" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-[#222]">{s.value}</div>
-                  <div className="text-[11px] text-[#818c99]">{s.label}</div>
+                  <div className="text-xl font-bold text-[#1a1a2e]">{s.value}</div>
+                  <div className="text-[11px] text-[#6b7280]">{s.label}</div>
                 </div>
               </div>
             ))}
@@ -689,20 +689,20 @@ export default function Home() {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-3 flex-1 min-h-0 flex flex-col">
-          <TabsList className="bg-white rounded-xl shadow-sm border border-[#dce1e6]/50 h-11 p-1 w-full grid grid-cols-4 flex-shrink-0">
-            <TabsTrigger value="connect" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0077FF] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#222]">
+          <TabsList className="bg-white rounded-xl shadow-sm border border-[#c8d0da]/50 h-11 p-1 w-full grid grid-cols-4 flex-shrink-0">
+            <TabsTrigger value="connect" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0059D6] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#1a1a2e]">
               <Link2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Подключение</span>
             </TabsTrigger>
-            <TabsTrigger value="chats" disabled={!connected} className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0077FF] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#222]">
+            <TabsTrigger value="chats" disabled={!connected} className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0059D6] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#1a1a2e]">
               <Users className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Чаты</span>
             </TabsTrigger>
-            <TabsTrigger value="tasks" disabled={!connected} className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0077FF] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#222]">
+            <TabsTrigger value="tasks" disabled={!connected} className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0059D6] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#1a1a2e]">
               <CalendarDays className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Расписание</span>
             </TabsTrigger>
-            <TabsTrigger value="logs" disabled={!connected} className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0077FF] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#222]">
+            <TabsTrigger value="logs" disabled={!connected} className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0059D6] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#1a1a2e]">
               <Activity className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Логи</span>
             </TabsTrigger>
@@ -712,31 +712,31 @@ export default function Home() {
           <TabsContent value="connect" className="flex-1 min-h-0 overflow-y-auto mt-0">
             <div className="grid gap-4 md:grid-cols-5">
               <div className="md:col-span-3">
-                <Card className="border-[#dce1e6]/50 shadow-sm">
+                <Card className="border-[#c8d0da]/50 shadow-sm">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-[#222]">
-                      <div className="w-8 h-8 rounded-lg bg-[#0077FF]/10 flex items-center justify-center">
-                        <Link2 className="w-4 h-4 text-[#0077FF]" />
+                    <CardTitle className="flex items-center gap-2 text-[#1a1a2e]">
+                      <div className="w-8 h-8 rounded-lg bg-[#0059D6]/15 flex items-center justify-center">
+                        <Link2 className="w-4 h-4 text-[#0059D6]" />
                       </div>
                       Подключение к ВКонтакте
                     </CardTitle>
-                    <CardDescription className="text-[#818c99]">
+                    <CardDescription className="text-[#6b7280]">
                       Введите токен доступа для подключения к вашему аккаунту
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {connected ? (
                       <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-[#e1f0ff] rounded-xl border border-[#b3d4ff]">
+                        <div className="flex items-center gap-4 p-4 bg-[#d0e3ff] rounded-xl border border-[#a3c4ff]">
                           <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
                             {connection?.userPhoto && <AvatarImage src={connection.userPhoto} />}
-                            <AvatarFallback className="bg-[#0077FF] text-white text-lg font-bold">
+                            <AvatarFallback className="bg-[#0059D6] text-white text-lg font-bold">
                               {connection?.userName?.charAt(0) || 'VK'}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
-                            <p className="font-bold text-[#222]">{connection?.userName}</p>
-                            <p className="text-xs text-[#818c99]">ID: {connection?.userId}</p>
+                            <p className="font-bold text-[#1a1a2e]">{connection?.userName}</p>
+                            <p className="text-xs text-[#6b7280]">ID: {connection?.userId}</p>
                           </div>
                           <Badge className="bg-green-50 text-green-700 border border-green-200">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5" />
@@ -760,7 +760,7 @@ export default function Home() {
                             <Button
                               onClick={handleOAuthConnect}
                               disabled={oauthConnecting}
-                              className="w-full h-12 bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl text-base gap-2"
+                              className="w-full h-12 bg-[#0059D6] hover:bg-[#0047B3] text-white font-semibold rounded-xl text-base gap-2"
                             >
                               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <rect width="20" height="20" rx="4" fill="white" fillOpacity="0.2"/>
@@ -770,16 +770,16 @@ export default function Home() {
                             </Button>
                             <div className="relative">
                               <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-[#dce1e6]" />
+                                <span className="w-full border-t border-[#c8d0da]" />
                               </div>
                               <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white px-2 text-[#818c99]">или введите токен вручную</span>
+                                <span className="bg-white px-2 text-[#6b7280]">или введите токен вручную</span>
                               </div>
                             </div>
                           </>
                         )}
                         <div className="space-y-2">
-                          <Label htmlFor="token" className="text-[#222]">Токен доступа</Label>
+                          <Label htmlFor="token" className="text-[#1a1a2e]">Токен доступа</Label>
                           <Input
                             id="token"
                             type="password"
@@ -787,13 +787,13 @@ export default function Home() {
                             value={token}
                             onChange={e => setToken(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleConnect()}
-                            className="h-11 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl"
+                            className="h-11 border-[#c8d0da] focus:border-[#0059D6] focus:ring-[#0059D6]/20 rounded-xl"
                           />
                         </div>
                         <Button
                           onClick={handleConnect}
                           disabled={connecting}
-                          className="w-full h-11 bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl"
+                          className="w-full h-11 bg-[#0059D6] hover:bg-[#0047B3] text-white font-semibold rounded-xl"
                         >
                           {connecting ? (
                             <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -819,15 +819,15 @@ export default function Home() {
                   <CardContent className="space-y-3 text-sm text-amber-900">
                     <div className="space-y-3">
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-full bg-[#0077FF] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                        <div className="w-6 h-6 rounded-full bg-[#0059D6] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
                         <p className="leading-snug">Создайте Standalone-приложение на <a href="https://vk.com/editapp?act=create" target="_blank" rel="noopener noreferrer" className="text-[#2a5885] underline">vk.com/editapp</a></p>
                       </div>
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-full bg-[#0077FF] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                        <div className="w-6 h-6 rounded-full bg-[#0059D6] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
                         <p className="leading-snug">Получите токен через Implicit Flow с правами <code className="bg-white/60 px-1 rounded text-xs">messages</code></p>
                       </div>
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-full bg-[#0077FF] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                        <div className="w-6 h-6 rounded-full bg-[#0059D6] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
                         <p className="leading-snug">Скопируйте токен из адресной строки и вставьте в поле</p>
                       </div>
                     </div>
@@ -851,17 +851,17 @@ export default function Home() {
 
           {/* ===== CHATS TAB ===== */}
           <TabsContent value="chats" className="flex-1 min-h-0 mt-0">
-            <Card className="border-[#dce1e6]/50 shadow-sm h-full flex flex-col">
+            <Card className="border-[#c8d0da]/50 shadow-sm h-full flex flex-col">
               <CardHeader className="pb-3 flex-shrink-0">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-[#222]">
-                      <div className="w-8 h-8 rounded-lg bg-[#0077FF]/10 flex items-center justify-center">
-                        <Users className="w-4 h-4 text-[#0077FF]" />
+                    <CardTitle className="flex items-center gap-2 text-[#1a1a2e]">
+                      <div className="w-8 h-8 rounded-lg bg-[#0059D6]/15 flex items-center justify-center">
+                        <Users className="w-4 h-4 text-[#0059D6]" />
                       </div>
                       Чаты ВКонтакте
                     </CardTitle>
-                    <CardDescription className="mt-1 text-[#818c99]">
+                    <CardDescription className="mt-1 text-[#6b7280]">
                       {selectedChats.length > 0
                         ? `Выбрано ${selectedChats.length} из ${chats.length} чатов`
                         : 'Выберите чаты для отправки сообщений'
@@ -873,7 +873,7 @@ export default function Home() {
                     size="sm"
                     onClick={() => fetchChats(true)}
                     disabled={loadingChats}
-                    className="border-[#0077FF]/30 text-[#0077FF] hover:bg-[#0077FF]/5 rounded-xl"
+                    className="border-[#0059D6]/30 text-[#0059D6] hover:bg-[#0059D6]/5 rounded-xl"
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${loadingChats ? 'animate-spin' : ''}`} />
                     Обновить
@@ -887,7 +887,7 @@ export default function Home() {
                       placeholder="Поиск чатов..."
                       value={chatSearch}
                       onChange={e => setChatSearch(e.target.value)}
-                      className="h-9 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl"
+                      className="h-9 border-[#c8d0da] focus:border-[#0059D6] focus:ring-[#0059D6]/20 rounded-xl"
                     />
                     <Button
                       variant="outline"
@@ -896,7 +896,7 @@ export default function Home() {
                         const allSelected = selectedChats.length === chats.length;
                         chats.forEach(c => toggleChatSelection(c.id, !allSelected));
                       }}
-                      className="w-full border-[#0077FF]/30 text-[#0077FF] hover:bg-[#0077FF]/5 rounded-xl h-8 text-xs"
+                      className="w-full border-[#0059D6]/30 text-[#0059D6] hover:bg-[#0059D6]/5 rounded-xl h-8 text-xs"
                     >
                       {selectedChats.length === chats.length ? 'Снять выделение со всех' : 'Выбрать все чаты'}
                     </Button>
@@ -905,11 +905,11 @@ export default function Home() {
 
                 {loadingChats ? (
                   <div className="flex items-center justify-center py-16">
-                    <RefreshCw className="w-6 h-6 animate-spin text-[#0077FF]" />
-                    <span className="ml-3 text-[#818c99]">Загрузка чатов...</span>
+                    <RefreshCw className="w-6 h-6 animate-spin text-[#0059D6]" />
+                    <span className="ml-3 text-[#6b7280]">Загрузка чатов...</span>
                   </div>
                 ) : chats.length === 0 ? (
-                  <div className="text-center py-16 text-[#818c99]">
+                  <div className="text-center py-16 text-[#6b7280]">
                     <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p className="text-sm">Чаты не найдены</p>
                     <p className="text-xs mt-1">Нажмите &quot;Обновить&quot; для загрузки из ВКонтакте</p>
@@ -922,7 +922,7 @@ export default function Home() {
                           key={chat.id}
                           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
                             chat.isSelected
-                              ? 'bg-[#e1f0ff] border border-[#b3d4ff]'
+                              ? 'bg-[#d0e3ff] border border-[#a3c4ff]'
                               : 'hover:bg-gray-50 border border-transparent'
                           }`}
                           onClick={() => toggleChatSelection(chat.id, !chat.isSelected)}
@@ -931,7 +931,7 @@ export default function Home() {
                             {chat.photo && <AvatarImage src={chat.photo} />}
                             <AvatarFallback className={
                               chat.chatType === 'group'
-                                ? 'bg-[#0077FF]/10 text-[#0077FF]'
+                                ? 'bg-[#0059D6]/15 text-[#0059D6]'
                                 : 'bg-purple-50 text-purple-600'
                             }>
                               {chat.chatType === 'group' ? (
@@ -942,14 +942,14 @@ export default function Home() {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-[#222] truncate">{chat.title}</p>
-                            <p className="text-xs text-[#818c99]">
+                            <p className="font-semibold text-sm text-[#1a1a2e] truncate">{chat.title}</p>
+                            <p className="text-xs text-[#6b7280]">
                               {chat.chatType === 'group' ? 'Беседа' : 'Личные сообщения'} · {chat.vkPeerId}
                             </p>
                           </div>
                           <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                             chat.isSelected
-                              ? 'bg-[#0077FF] border-[#0077FF]'
+                              ? 'bg-[#0059D6] border-[#0059D6]'
                               : 'border-gray-300'
                           }`}>
                             {chat.isSelected && <CheckCircle className="w-3 h-3 text-white" />}
@@ -960,14 +960,14 @@ export default function Home() {
                   </ScrollArea>
                 )}
                 {selectedChats.length > 0 && (
-                  <div className="flex-shrink-0 mt-3 p-3 bg-[#e1f0ff] rounded-xl border border-[#b3d4ff] flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-sm text-[#0077FF]">
+                  <div className="flex-shrink-0 mt-3 p-3 bg-[#d0e3ff] rounded-xl border border-[#a3c4ff] flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-sm text-[#0059D6]">
                       <CheckCircle className="w-4 h-4" />
                       <span className="font-medium">Выбрано {selectedChats.length} чат{selectedChats.length === 1 ? '' : selectedChats.length < 5 ? 'а' : 'ов'}</span>
                     </div>
                     <Button
                       onClick={() => openCreateDialog()}
-                      className="bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl h-9"
+                      className="bg-[#0059D6] hover:bg-[#0047B3] text-white font-semibold rounded-xl h-9"
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Запланировать
@@ -984,11 +984,11 @@ export default function Home() {
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-bold text-[#222] flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-[#0077FF]" />
+                  <h2 className="text-lg font-bold text-[#1a1a2e] flex items-center gap-2">
+                    <CalendarDays className="w-5 h-5 text-[#0059D6]" />
                     Запланированные сообщения
                   </h2>
-                  <p className="text-sm text-[#818c99]">
+                  <p className="text-sm text-[#6b7280]">
                     {tasks.filter(t => t.isActive).length} активных · {tasks.length} всего
                   </p>
                 </div>
@@ -997,20 +997,20 @@ export default function Home() {
                     variant="outline"
                     size="sm"
                     onClick={runScheduler}
-                    className="border-[#0077FF]/30 text-[#0077FF] hover:bg-[#0077FF]/5 rounded-xl"
+                    className="border-[#0059D6]/30 text-[#0059D6] hover:bg-[#0059D6]/5 rounded-xl"
                   >
                     <Play className="w-4 h-4 mr-2" />
                     Проверить
                   </Button>
                   <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button className="bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl h-9 px-4">
+                      <Button className="bg-[#0059D6] hover:bg-[#0047B3] text-white font-semibold rounded-xl h-9 px-4">
                         <Plus className="w-4 h-4 mr-2" />
                         Новая задача
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
-                      <DialogHeader className="flex-shrink-0 bg-[#0077FF] -mx-6 -mt-6 px-6 pt-6 pb-4">
+                      <DialogHeader className="flex-shrink-0 bg-[#0059D6] -mx-6 -mt-6 px-6 pt-6 pb-4">
                         <DialogTitle className="text-white">Новое запланированное сообщение</DialogTitle>
                         <DialogDescription className="text-white/70">
                           Настройте время и содержание сообщения
@@ -1019,38 +1019,38 @@ export default function Home() {
                       <div className="space-y-4 py-4 overflow-y-auto flex-1 min-h-0">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <Label className="text-[#222]">Чаты * ({selectedChatIdsForTask.length} выбрано)</Label>
+                            <Label className="text-[#1a1a2e]">Чаты * ({selectedChatIdsForTask.length} выбрано)</Label>
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
                               onClick={selectAllChatsForTask}
-                              className="h-7 text-xs text-[#0077FF] hover:text-[#0066dd] px-2"
+                              className="h-7 text-xs text-[#0059D6] hover:text-[#0047B3] px-2"
                             >
                               {selectedChatIdsForTask.length === chats.length ? 'Снять все' : 'Все чаты'}
                             </Button>
                           </div>
-                          <div className="border border-[#dce1e6] rounded-xl max-h-40 overflow-y-auto">
+                          <div className="border border-[#c8d0da] rounded-xl max-h-40 overflow-y-auto">
                             {chats.length === 0 ? (
-                              <div className="p-3 text-sm text-[#818c99] text-center">
+                              <div className="p-3 text-sm text-[#6b7280] text-center">
                                 Сначала загрузите чаты
                               </div>
                             ) : (
                               chats.map(chat => (
                                 <label
                                   key={chat.id}
-                                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors border-b border-[#dce1e6]/50 last:border-0 ${
-                                    selectedChatIdsForTask.includes(chat.id) ? 'bg-[#e1f0ff]' : 'hover:bg-gray-50'
+                                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors border-b border-[#c8d0da]/50 last:border-0 ${
+                                    selectedChatIdsForTask.includes(chat.id) ? 'bg-[#d0e3ff]' : 'hover:bg-gray-50'
                                   }`}
                                 >
                                   <input
                                     type="checkbox"
                                     checked={selectedChatIdsForTask.includes(chat.id)}
                                     onChange={() => toggleChatInTask(chat.id)}
-                                    className="w-4 h-4 rounded border-[#dce1e6] text-[#0077FF] focus:ring-[#0077FF]/20"
+                                    className="w-4 h-4 rounded border-[#c8d0da] text-[#0059D6] focus:ring-[#0059D6]/20"
                                   />
-                                  <span className="text-sm text-[#222] truncate flex-1">{chat.title}</span>
-                                  <span className="text-xs text-[#818c99]">
+                                  <span className="text-sm text-[#1a1a2e] truncate flex-1">{chat.title}</span>
+                                  <span className="text-xs text-[#6b7280]">
                                     {chat.chatType === 'group' ? 'Беседа' : 'ЛС'}
                                   </span>
                                 </label>
@@ -1058,27 +1058,27 @@ export default function Home() {
                             )}
                           </div>
                           {selectedChatIdsForTask.length > 1 && (
-                            <p className="text-xs text-[#0077FF] flex items-center gap-1">
+                            <p className="text-xs text-[#0059D6] flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               Отправка с интервалом 15 сек между чатами
                             </p>
                           )}
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[#222]">Текст сообщения *</Label>
+                          <Label className="text-[#1a1a2e]">Текст сообщения *</Label>
                           <Textarea
                             placeholder="Введите текст сообщения..."
                             value={newTaskMessage}
                             onChange={e => setNewTaskMessage(e.target.value)}
                             rows={3}
-                            className="max-h-32 overflow-y-auto border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl"
+                            className="max-h-32 overflow-y-auto border-[#c8d0da] focus:border-[#0059D6] focus:ring-[#0059D6]/20 rounded-xl"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-[#222]">Тип расписания</Label>
+                            <Label className="text-[#1a1a2e]">Тип расписания</Label>
                             <Select value={newTaskScheduleType} onValueChange={setNewTaskScheduleType}>
-                              <SelectTrigger className="border-[#dce1e6] rounded-xl">
+                              <SelectTrigger className="border-[#c8d0da] rounded-xl">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1091,21 +1091,21 @@ export default function Home() {
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[#222]">{newTaskScheduleType === 'interval' ? 'Начать с' : 'Дата и время'}</Label>
+                            <Label className="text-[#1a1a2e]">{newTaskScheduleType === 'interval' ? 'Начать с' : 'Дата и время'}</Label>
                             <Input
                               type="datetime-local"
                               value={newTaskScheduledAt}
                               onChange={e => setNewTaskScheduledAt(e.target.value)}
                               min={getMinDateTime()}
-                              className="border-[#dce1e6] focus:border-[#0077FF] rounded-xl"
+                              className="border-[#c8d0da] focus:border-[#0059D6] rounded-xl"
                             />
                           </div>
                         </div>
                         {newTaskScheduleType === 'interval' && (
                           <div className="space-y-2">
-                            <Label className="text-[#222]">Интервал отправки</Label>
+                            <Label className="text-[#1a1a2e]">Интервал отправки</Label>
                             <Select value={newTaskInterval} onValueChange={setNewTaskInterval}>
-                              <SelectTrigger className="border-[#dce1e6] rounded-xl">
+                              <SelectTrigger className="border-[#c8d0da] rounded-xl">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1118,9 +1118,9 @@ export default function Home() {
                         )}
                         {newTaskScheduleType === 'weekly' && (
                           <div className="space-y-2">
-                            <Label className="text-[#222]">День недели</Label>
+                            <Label className="text-[#1a1a2e]">День недели</Label>
                             <Select value={newTaskDayOfWeek} onValueChange={setNewTaskDayOfWeek}>
-                              <SelectTrigger className="border-[#dce1e6] rounded-xl"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="border-[#c8d0da] rounded-xl"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {DAYSOfWeek.map((day, i) => (
                                   <SelectItem key={i} value={String(i)}>{day}</SelectItem>
@@ -1131,9 +1131,9 @@ export default function Home() {
                         )}
                         {newTaskScheduleType === 'monthly' && (
                           <div className="space-y-2">
-                            <Label className="text-[#222]">День месяца</Label>
+                            <Label className="text-[#1a1a2e]">День месяца</Label>
                             <Select value={newTaskDayOfMonth} onValueChange={setNewTaskDayOfMonth}>
-                              <SelectTrigger className="border-[#dce1e6] rounded-xl"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="border-[#c8d0da] rounded-xl"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                                   <SelectItem key={d} value={String(d)}>{d}</SelectItem>
@@ -1156,9 +1156,9 @@ export default function Home() {
                           />
                         </div>
                       </div>
-                      <DialogFooter className="flex-shrink-0 pt-2 border-t border-[#dce1e6]">
+                      <DialogFooter className="flex-shrink-0 pt-2 border-t border-[#c8d0da]">
                         <Button variant="outline" onClick={() => setCreateDialogOpen(false)} className="rounded-xl">Отмена</Button>
-                        <Button onClick={handleCreateTask} disabled={creating} className="bg-[#0077FF] hover:bg-[#0066dd] text-white rounded-xl">
+                        <Button onClick={handleCreateTask} disabled={creating} className="bg-[#0059D6] hover:bg-[#0047B3] text-white rounded-xl">
                           {creating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
                           {creating ? 'Создание...' : 'Запланировать'}
                         </Button>
@@ -1169,8 +1169,8 @@ export default function Home() {
               </div>
 
               {tasks.length === 0 ? (
-                <Card className="border-[#dce1e6]/50 shadow-sm">
-                  <CardContent className="py-16 text-center text-[#818c99]">
+                <Card className="border-[#c8d0da]/50 shadow-sm">
+                  <CardContent className="py-16 text-center text-[#6b7280]">
                     <CalendarDays className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p>Нет запланированных сообщений</p>
                     <p className="text-xs mt-1">Нажмите &quot;Новая задача&quot; для создания</p>
@@ -1179,13 +1179,13 @@ export default function Home() {
               ) : (
                 <div className="grid gap-2">
                   {tasks.map(task => (
-                    <Card key={task.id} className={`border-[#dce1e6]/50 shadow-sm ${!task.isActive ? 'opacity-50' : ''}`}>
+                    <Card key={task.id} className={`border-[#c8d0da]/50 shadow-sm ${!task.isActive ? 'opacity-50' : ''}`}>
                       <CardContent className="p-3 sm:p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0 space-y-1.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {getStatusBadge(task.status)}
-                              <Badge variant="outline" className="text-xs border-[#0077FF]/30 text-[#0077FF] font-medium">
+                              <Badge variant="outline" className="text-xs border-[#0059D6]/30 text-[#0059D6] font-medium">
                                 {SCHEDULE_LABELS[task.scheduleType] || task.scheduleType}
                                 {task.scheduleType === 'interval' && task.intervalMinutes
                                   ? ` — ${formatInterval(task.intervalMinutes)}`
@@ -1203,8 +1203,8 @@ export default function Home() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-[#222] break-words line-clamp-2">{task.messageText}</p>
-                            <div className="flex items-center gap-3 text-xs text-[#818c99]">
+                            <p className="text-sm text-[#1a1a2e] break-words line-clamp-2">{task.messageText}</p>
+                            <div className="flex items-center gap-3 text-xs text-[#6b7280]">
                               <span className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
                                 {new Date(task.scheduledAt).toLocaleString('ru-RU')}
@@ -1221,7 +1221,7 @@ export default function Home() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-[#818c99] hover:text-[#0077FF]"
+                              className="h-8 w-8 text-[#6b7280] hover:text-[#0059D6]"
                               onClick={() => toggleTaskActive(task.id, !task.isActive)}
                               title={task.isActive ? 'Приостановить' : 'Активировать'}
                             >
@@ -1230,7 +1230,7 @@ export default function Home() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-[#818c99] hover:text-red-500"
+                              className="h-8 w-8 text-[#6b7280] hover:text-red-500"
                               onClick={() => deleteTask(task.id)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1247,17 +1247,17 @@ export default function Home() {
 
           {/* ===== LOGS TAB ===== */}
           <TabsContent value="logs" className="flex-1 min-h-0 mt-0">
-            <Card className="border-[#dce1e6]/50 shadow-sm h-full flex flex-col">
+            <Card className="border-[#c8d0da]/50 shadow-sm h-full flex flex-col">
               <CardHeader className="pb-3 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-[#222]">
-                      <div className="w-8 h-8 rounded-lg bg-[#0077FF]/10 flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-[#0077FF]" />
+                    <CardTitle className="flex items-center gap-2 text-[#1a1a2e]">
+                      <div className="w-8 h-8 rounded-lg bg-[#0059D6]/15 flex items-center justify-center">
+                        <Activity className="w-4 h-4 text-[#0059D6]" />
                       </div>
                       Журнал отправок
                     </CardTitle>
-                    <CardDescription className="mt-1 text-[#818c99]">
+                    <CardDescription className="mt-1 text-[#6b7280]">
                       История отправленных сообщений и ошибок
                     </CardDescription>
                   </div>
@@ -1265,7 +1265,7 @@ export default function Home() {
                     variant="outline"
                     size="sm"
                     onClick={fetchLogs}
-                    className="border-[#0077FF]/30 text-[#0077FF] hover:bg-[#0077FF]/5 rounded-xl"
+                    className="border-[#0059D6]/30 text-[#0059D6] hover:bg-[#0059D6]/5 rounded-xl"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Обновить
@@ -1274,7 +1274,7 @@ export default function Home() {
               </CardHeader>
               <CardContent className="flex-1 min-h-0 flex flex-col pt-0">
                 {logs.length === 0 ? (
-                  <div className="text-center py-16 text-[#818c99]">
+                  <div className="text-center py-16 text-[#6b7280]">
                     <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p>Журнал пуст</p>
                     <p className="text-xs mt-1">Записи появятся после отправки сообщений</p>
@@ -1295,14 +1295,14 @@ export default function Home() {
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2">
-                              <p className="text-sm font-medium text-[#222] truncate">
+                              <p className="text-sm font-medium text-[#1a1a2e] truncate">
                                 {log.task?.chat?.title || 'Чат'}
                               </p>
-                              <span className="text-[11px] text-[#818c99] whitespace-nowrap">
+                              <span className="text-[11px] text-[#6b7280] whitespace-nowrap">
                                 {new Date(log.sentAt).toLocaleString('ru-RU')}
                               </span>
                             </div>
-                            <p className="text-xs text-[#818c99] mt-0.5 truncate">
+                            <p className="text-xs text-[#6b7280] mt-0.5 truncate">
                               {log.task?.messageText || '—'}
                             </p>
                             {log.error && (
@@ -1321,8 +1321,8 @@ export default function Home() {
       </main>
 
       {/* Footer — VK Style */}
-      <footer className="bg-white border-t border-[#dce1e6]/50 flex-shrink-0">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-between text-[11px] text-[#818c99]">
+      <footer className="bg-white border-t border-[#c8d0da]/50 flex-shrink-0">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-between text-[11px] text-[#6b7280]">
           <span>VK Messages — Автоматическая отправка сообщений</span>
           <span className="flex items-center gap-2">
             {connected ? (
