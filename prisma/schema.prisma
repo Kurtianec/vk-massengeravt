@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("user")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  connections  VkConnection[]
+}
+
+model VkConnection {
+  id          String   @id @default(cuid())
+  accessToken String
+  userId      Int?
+  userName    String?
+  userPhoto   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ownerId     String?
+  owner       User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  chats VkChat[]
+}
+
+model VkChat {
+  id           String   @id @default(cuid())
+  vkPeerId     Int
+  title        String
+  photo        String?
+  chatType     String   @default("group")
+  isSelected   Boolean  @default(false)
+  connectionId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  connection VkConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  tasks      ScheduledTask[]
+
+  @@unique([vkPeerId, connectionId])
+}
+
+model ScheduledTask {
+  id              String   @id @default(cuid())
+  chatId          String
+  messageText     String
+  scheduleType    String   @default("once")
+  scheduledAt     DateTime
+  dayOfWeek       Int?
+  dayOfMonth      Int?
+  intervalMinutes Int?
+  deletePrevious  Boolean  @default(false)
+  lastMessageId   Int?
+  isActive        Boolean  @default(true)
+  lastSentAt      DateTime?
+  status          String   @default("pending")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  chat VkChat  @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  logs SendLog[]
+}
+
+model SendLog {
+  id     String   @id @default(cuid())
+  taskId String
+  status String   @default("sent")
+  error  String?
+  sentAt DateTime @default(now())
+
+  task ScheduledTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Setting {
+  key   String @id
+  value String @default("")
+}
