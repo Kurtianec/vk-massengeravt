@@ -135,6 +135,7 @@ export default function Home() {
   // Auth state
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authSlow, setAuthSlow] = useState(false);
 
   // App state
   const [connection, setConnection] = useState<VkConnection | null>(null);
@@ -148,8 +149,8 @@ export default function Home() {
   const [logs, setLogs] = useState<SendLogEntry[]>([]);
   const [activeTab, setActiveTab] = useState('connect');
 
-  // New task form
-  const [newTaskChatId, setNewTaskChatId] = useState('');
+  // New task form — multi-chat support
+  const [selectedChatIdsForTask, setSelectedChatIdsForTask] = useState<string[]>([]);
   const [newTaskMessage, setNewTaskMessage] = useState('');
   const [newTaskScheduleType, setNewTaskScheduleType] = useState('once');
   const [newTaskScheduledAt, setNewTaskScheduledAt] = useState('');
@@ -166,12 +167,10 @@ export default function Home() {
   // OAuth message listener
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Only accept messages from our own origin (security)
       if (event.origin !== window.location.origin) return;
 
       if (event.data?.type === 'vk-oauth-token' && event.data.accessToken) {
         setToken(event.data.accessToken);
-        // Auto-connect with the received token
         handleConnectWithToken(event.data.accessToken);
       } else if (event.data?.type === 'vk-oauth-error') {
         toast({
@@ -244,20 +243,39 @@ export default function Home() {
 
   // Check authentication on mount
   useEffect(() => {
+    let redirected = false;
+
+    const goToLogin = () => {
+      if (!redirected) {
+        redirected = true;
+        window.location.replace('/login');
+      }
+    };
+
     const checkAuth = async () => {
+      // Show "slow" indicator after 3 seconds
+      const slowTimer = setTimeout(() => setAuthSlow(true), 3000);
+      // Hard fallback: force redirect to login after 12 seconds no matter what
+      const hardTimeout = setTimeout(goToLogin, 12000);
+
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const res = await fetch('/api/auth/session', { signal: controller.signal });
         clearTimeout(timeoutId);
+        clearTimeout(slowTimer);
+        clearTimeout(hardTimeout);
+
         const data = await res.json();
         if (data.authenticated && data.user) {
           setAuthUser(data.user);
         } else {
-          window.location.href = '/login';
+          goToLogin();
         }
       } catch {
-        window.location.href = '/login';
+        clearTimeout(slowTimer);
+        clearTimeout(hardTimeout);
+        goToLogin();
       } finally {
         setAuthLoading(false);
       }
@@ -420,8 +438,9 @@ export default function Home() {
     }
   };
 
+  // TIMEZONE FIX: convert local datetime to ISO so server stores correct UTC
   const handleCreateTask = async () => {
-    if (!newTaskChatId || !newTaskMessage || !newTaskScheduledAt) {
+    if (selectedChatIdsForTask.length === 0 || !newTaskMessage || !newTaskScheduledAt) {
       toast({ title: 'Ошибка', description: 'Заполните все обязательные поля', variant: 'destructive' });
       return;
     }
@@ -431,10 +450,18 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chatId: newTaskChatId,
+          chatIds: selectedChatIdsForTask,
           messageText: newTaskMessage,
           scheduleType: newTaskScheduleType,
-          scheduledAt: newTaskScheduledAt,
+          // TIMEZONE FIX: explicitly parse datetime-local as LOCAL time
+          // new Date("YYYY-MM-DDTHH:mm") can be interpreted as UTC in some environments
+          // So we manually construct a local Date to avoid any ambiguity
+          scheduledAt: (() => {
+            const [datePart, timePart] = newTaskScheduledAt.split('T');
+            const [year, month, day] = datePart.split('-').map(Number);
+            const [hours, minutes] = timePart.split(':').map(Number);
+            return new Date(year, month - 1, day, hours, minutes).toISOString();
+          })(),
           dayOfWeek: newTaskScheduleType === 'weekly' ? parseInt(newTaskDayOfWeek) : null,
           dayOfMonth: newTaskScheduleType === 'monthly' ? parseInt(newTaskDayOfMonth) : null,
           intervalMinutes: newTaskScheduleType === 'interval' ? parseInt(newTaskInterval) : null,
@@ -443,9 +470,10 @@ export default function Home() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast({ title: 'Задача создана', description: 'Сообщение запланировано к отправке' });
+        const count = data.count || data.tasks?.length || 1;
+        toast({ title: 'Задачи созданы', description: `${count} задач запланировано` });
         setCreateDialogOpen(false);
-        setNewTaskChatId('');
+        setSelectedChatIdsForTask([]);
         setNewTaskMessage('');
         setNewTaskScheduleType('once');
         setNewTaskScheduledAt('');
@@ -460,6 +488,19 @@ export default function Home() {
     } finally {
       setCreating(false);
     }
+  };
+
+  const openCreateDialog = (preselectedChatIds?: string[]) => {
+    setSelectedChatIdsForTask(preselectedChatIds || selectedChats.map(c => c.id));
+    setCreateDialogOpen(true);
+  };
+
+  const toggleChatInTask = (chatId: string) => {
+    setSelectedChatIdsForTask(prev =>
+      prev.includes(chatId)
+        ? prev.filter(id => id !== chatId)
+        : [...prev, chatId]
+    );
   };
 
   const toggleTaskActive = async (taskId: string, isActive: boolean) => {
@@ -502,13 +543,13 @@ export default function Home() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusIndicator = (status: string) => {
     switch (status) {
-      case 'sent': return <Badge className="bg-green-50 text-green-700 border border-green-200 font-medium"><CheckCircle className="w-3 h-3 mr-1" />Отправлено</Badge>;
-      case 'failed': return <Badge className="bg-red-50 text-red-700 border border-red-200 font-medium"><XCircle className="w-3 h-3 mr-1" />Ошибка</Badge>;
-      case 'pending': return <Badge className="bg-amber-50 text-amber-700 border border-amber-200 font-medium"><Clock className="w-3 h-3 mr-1" />Ожидание</Badge>;
-      case 'disabled': return <Badge variant="secondary" className="font-medium"><Pause className="w-3 h-3 mr-1" />Отключено</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
+      case 'sent': return { dot: 'bg-emerald-500', label: 'Отправлено', cls: 'text-emerald-400' };
+      case 'failed': return { dot: 'bg-red-500', label: 'Ошибка', cls: 'text-red-400' };
+      case 'pending': return { dot: 'bg-amber-500', label: 'Ожидание', cls: 'text-amber-400' };
+      case 'disabled': return { dot: 'bg-zinc-600', label: 'Отключено', cls: 'text-zinc-400' };
+      default: return { dot: 'bg-zinc-500', label: status, cls: 'text-zinc-400' };
     }
   };
 
@@ -517,14 +558,17 @@ export default function Home() {
     ? chats.filter(c => c.title.toLowerCase().includes(chatSearch.toLowerCase()))
     : chats;
 
+  // TIMEZONE FIX: getMinDateTime returns local time for the datetime picker
   const getMinDateTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 5);
-    return now.toISOString().slice(0, 16);
+    const offset = now.getTimezoneOffset();
+    const local = new Date(now.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
   };
 
   const statsCards = [
-    { label: 'Всего чатов', value: chats.length, icon: Users },
+    { label: 'Чатов', value: chats.length, icon: Users },
     { label: 'Выбрано', value: selectedChats.length, icon: CheckCircle },
     { label: 'Задач', value: tasks.length, icon: CalendarDays },
     { label: 'Отправлено', value: logs.filter(l => l.status === 'sent').length, icon: Send },
@@ -533,13 +577,22 @@ export default function Home() {
   // Loading state while checking auth
   if (authLoading) {
     return (
-      <div className="h-screen bg-[#edeef0] flex items-center justify-center">
+      <div className="h-screen bg-[#09090b] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <svg className="animate-spin h-8 w-8 text-[#0077FF]" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-          </svg>
-          <p className="text-sm text-[#818c99]">Загрузка...</p>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center animate-pulse">
+            <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+              <path d="M7 10h2.5c.3 0 .5.2.6.4.4 1 1.2 2.8 2 3.2.3.2.4 0 .4-.3v-2c0-.7-.3-1.3-.3-1.3s-.2-.3-.5-.3c-.2 0-.3-.2-.2-.3.1-.2.4-.4.8-.4h2c.4 0 .7.3.7.7v3c0 .3.2.5.4.3.6-.4 1.5-2 2.1-3.3.1-.3.3-.4.5-.4h2.2c.4 0 .7.4.5.8-.8 1.5-2.1 3.5-2.7 4.1-.3.3-.2.6 0 .9.7.7 2 2.1 2.5 2.8.2.3.1.7-.3.7h-2.5c-.3 0-.5-.1-.7-.3-.5-.5-1.3-1.4-1.8-1.4-.2 0-.4.1-.4.5v.7c0 .3-.2.5-.5.5h-1.5c-2.5 0-4.5-3.5-5.8-6.5-.2-.3 0-.6.3-.6z" fill="white"/>
+            </svg>
+          </div>
+          <p className="text-sm text-zinc-500">Загрузка...</p>
+          {authSlow && (
+            <button
+              onClick={() => { window.location.href = '/login'; }}
+              className="mt-2 text-xs text-violet-400 hover:text-violet-300 underline transition-colors"
+            >
+              Перейти к входу
+            </button>
+          )}
         </div>
       </div>
     );
@@ -550,26 +603,22 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen bg-[#edeef0] flex flex-col overflow-hidden">
-      {/* Header — VK Style */}
-      <header className="bg-[#0077FF] z-50 shadow-md flex-shrink-0">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
+    <div className="h-screen bg-[#09090b] flex flex-col overflow-hidden" style={{ background: 'linear-gradient(180deg, #09090b 0%, #0f0f14 100%)' }}>
+      {/* Header — Minimal Glass */}
+      <header className="bg-zinc-950/60 backdrop-blur-xl z-50 border-b border-zinc-800/60 flex-shrink-0">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                <rect width="28" height="28" rx="6" fill="white" fillOpacity="0.2"/>
-                <path d="M7 10h2.5c.3 0 .5.2.6.4.4 1 1.2 2.8 2 3.2.3.2.4 0 .4-.3v-2c0-.7-.3-1.3-.3-1.3s-.2-.3-.5-.3c-.2 0-.3-.2-.2-.3.1-.2.4-.4.8-.4h2c.4 0 .7.3.7.7v3c0 .3.2.5.4.3.6-.4 1.5-2 2.1-3.3.1-.3.3-.4.5-.4h2.2c.4 0 .7.4.5.8-.8 1.5-2.1 3.5-2.7 4.1-.3.3-.2.6 0 .9.7.7 2 2.1 2.5 2.8.2.3.1.7-.3.7h-2.5c-.3 0-.5-.1-.7-.3-.5-.5-1.3-1.4-1.8-1.4-.2 0-.4.1-.4.5v.7c0 .3-.2.5-.5.5h-1.5c-2.5 0-4.5-3.5-5.8-6.5-.2-.3 0-.6.3-.6z" fill="white"/>
-              </svg>
-              <h1 className="text-white font-bold text-lg leading-none hidden sm:block">VK Messages</h1>
-            </div>
+            <h1 className="text-lg font-bold bg-gradient-to-r from-violet-400 to-violet-300 bg-clip-text text-transparent">
+              VK Messages
+            </h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {connected && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={runScheduler}
-                className="text-white/80 hover:text-white hover:bg-white/10 h-8 w-8 p-0"
+                className="text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50 h-9 w-9 p-0 rounded-lg transition-all duration-200"
                 title="Проверить расписание"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -579,51 +628,51 @@ export default function Home() {
             {/* User dropdown menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors">
-                  <Avatar className="w-7 h-7 border border-white/30">
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-zinc-800/50 transition-all duration-200">
+                  <Avatar className="w-7 h-7 border border-zinc-800">
                     {connection?.userPhoto && connected ? (
                       <AvatarImage src={connection.userPhoto} />
                     ) : null}
-                    <AvatarFallback className="bg-white/20 text-white text-xs font-bold">
+                    <AvatarFallback className="bg-violet-500/10 text-violet-400 text-xs font-bold">
                       {connected && connection?.userName
                         ? connection.userName.charAt(0).toUpperCase()
                         : authUser.name?.charAt(0).toUpperCase() || authUser.email.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-white text-sm font-medium hidden sm:block max-w-[120px] truncate">
+                  <span className="text-zinc-300 text-sm font-medium hidden sm:block max-w-[120px] truncate">
                     {authUser.name || authUser.email.split('@')[0]}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-white/60 hidden sm:block" />
+                  <ChevronDown className="w-3.5 h-3.5 text-zinc-500 hidden sm:block" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 bg-zinc-950/95 backdrop-blur-xl border-zinc-800">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-[#222]">{authUser.name || authUser.email.split('@')[0]}</p>
-                  <p className="text-xs text-[#818c99]">{authUser.email}</p>
+                  <p className="text-sm font-medium text-zinc-100">{authUser.name || authUser.email.split('@')[0]}</p>
+                  <p className="text-xs text-zinc-500">{authUser.email}</p>
                 </div>
                 {connected && connection && (
                   <>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator className="bg-zinc-800" />
                     <div className="px-2 py-1.5 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                      <span className="text-xs text-[#818c99]">ВК: {connection.userName}</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-xs text-zinc-500">ВК: {connection.userName}</span>
                     </div>
                   </>
                 )}
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-zinc-800" />
                 {authUser.role === 'admin' && (
-                  <DropdownMenuItem onClick={() => window.location.href = '/admin'} className="text-[#0077FF] focus:text-[#0077FF] cursor-pointer">
+                  <DropdownMenuItem onClick={() => window.location.href = '/admin'} className="text-violet-400 focus:text-violet-300 cursor-pointer">
                     <Shield className="w-4 h-4 mr-2" />
                     Админ-панель
                   </DropdownMenuItem>
                 )}
                 {connected && (
-                  <DropdownMenuItem onClick={handleDisconnect} className="text-[#818c99] focus:text-red-600 cursor-pointer">
+                  <DropdownMenuItem onClick={handleDisconnect} className="text-zinc-400 focus:text-red-400 cursor-pointer">
                     <LogOut className="w-4 h-4 mr-2" />
                     Отключить ВК
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 cursor-pointer">
+                <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-300 cursor-pointer">
                   <LogOut className="w-4 h-4 mr-2" />
                   Выйти из аккаунта
                 </DropdownMenuItem>
@@ -635,82 +684,86 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="flex-1 min-h-0 max-w-6xl mx-auto px-4 sm:px-6 py-4 w-full flex flex-col">
-        {/* Stats row */}
+        {/* Stats row — Compact strip */}
         {connected && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3 flex-shrink-0">
+          <div className="flex items-center gap-2 mb-4 flex-shrink-0 p-2 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 backdrop-blur-sm">
             {statsCards.map((s, i) => (
-              <div key={i} className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#dce1e6]/50">
-                <div className="w-9 h-9 rounded-lg bg-[#0077FF]/10 flex items-center justify-center">
-                  <s.icon className="w-4 h-4 text-[#0077FF]" />
+              <div key={i} className="flex-1 flex items-center gap-2.5 px-3 py-1.5">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 flex items-center justify-center flex-shrink-0">
+                  <s.icon className="w-3.5 h-3.5 text-violet-400" />
                 </div>
-                <div>
-                  <div className="text-xl font-bold text-[#222]">{s.value}</div>
-                  <div className="text-[11px] text-[#818c99]">{s.label}</div>
+                <div className="min-w-0">
+                  <div className="text-base font-semibold text-zinc-100 leading-tight">{s.value}</div>
+                  <div className="text-[10px] text-zinc-500 leading-tight">{s.label}</div>
                 </div>
+                {i < statsCards.length - 1 && (
+                  <div className="w-px h-6 bg-zinc-800/80 ml-auto flex-shrink-0" />
+                )}
               </div>
             ))}
           </div>
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-3 flex-1 min-h-0 flex flex-col">
-          <TabsList className="bg-white rounded-xl shadow-sm border border-[#dce1e6]/50 h-11 p-1 w-full grid grid-cols-4 flex-shrink-0">
-            <TabsTrigger value="connect" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0077FF] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#222]">
+          {/* Pill-style tabs */}
+          <div className="flex items-center gap-1 p-1 rounded-full bg-zinc-900/40 border border-zinc-800/60 backdrop-blur-sm flex-shrink-0">
+            <TabsTrigger value="connect" className="gap-1.5 rounded-full px-4 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-violet-500/25 text-zinc-500 hover:text-zinc-300 transition-all duration-200">
               <Link2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Подключение</span>
             </TabsTrigger>
-            <TabsTrigger value="chats" disabled={!connected} className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0077FF] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#222]">
+            <TabsTrigger value="chats" disabled={!connected} className="gap-1.5 rounded-full px-4 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-violet-500/25 text-zinc-500 hover:text-zinc-300 transition-all duration-200">
               <Users className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Чаты</span>
             </TabsTrigger>
-            <TabsTrigger value="tasks" disabled={!connected} className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0077FF] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#222]">
+            <TabsTrigger value="tasks" disabled={!connected} className="gap-1.5 rounded-full px-4 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-violet-500/25 text-zinc-500 hover:text-zinc-300 transition-all duration-200">
               <CalendarDays className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Расписание</span>
             </TabsTrigger>
-            <TabsTrigger value="logs" disabled={!connected} className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#0077FF] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#222]">
+            <TabsTrigger value="logs" disabled={!connected} className="gap-1.5 rounded-full px-4 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-violet-500/25 text-zinc-500 hover:text-zinc-300 transition-all duration-200">
               <Activity className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Логи</span>
             </TabsTrigger>
-          </TabsList>
+          </div>
 
           {/* ===== CONNECT TAB ===== */}
           <TabsContent value="connect" className="flex-1 min-h-0 overflow-y-auto mt-0">
             <div className="grid gap-4 md:grid-cols-5">
               <div className="md:col-span-3">
-                <Card className="border-[#dce1e6]/50 shadow-sm">
+                <Card className="border-zinc-800/60 bg-zinc-950/60 backdrop-blur-xl shadow-xl shadow-violet-500/[0.03] rounded-2xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-[#222]">
-                      <div className="w-8 h-8 rounded-lg bg-[#0077FF]/10 flex items-center justify-center">
-                        <Link2 className="w-4 h-4 text-[#0077FF]" />
+                    <CardTitle className="flex items-center gap-2.5 text-zinc-100 text-base font-semibold">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 flex items-center justify-center">
+                        <Link2 className="w-4 h-4 text-violet-400" />
                       </div>
                       Подключение к ВКонтакте
                     </CardTitle>
-                    <CardDescription className="text-[#818c99]">
+                    <CardDescription className="text-zinc-500">
                       Введите токен доступа для подключения к вашему аккаунту
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {connected ? (
                       <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-[#e1f0ff] rounded-xl border border-[#b3d4ff]">
-                          <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
+                        <div className="flex items-center gap-4 p-4 bg-violet-500/5 rounded-xl border border-violet-500/10">
+                          <Avatar className="w-12 h-12 border-2 border-violet-500/20 rounded-full">
                             {connection?.userPhoto && <AvatarImage src={connection.userPhoto} />}
-                            <AvatarFallback className="bg-[#0077FF] text-white text-lg font-bold">
+                            <AvatarFallback className="bg-violet-500/10 text-violet-400 text-lg font-bold rounded-full">
                               {connection?.userName?.charAt(0) || 'VK'}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
-                            <p className="font-bold text-[#222]">{connection?.userName}</p>
-                            <p className="text-xs text-[#818c99]">ID: {connection?.userId}</p>
+                            <p className="font-semibold text-zinc-100">{connection?.userName}</p>
+                            <p className="text-xs text-zinc-500">ID: {connection?.userId}</p>
                           </div>
-                          <Badge className="bg-green-50 text-green-700 border border-green-200">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5" />
-                            Подключён
-                          </Badge>
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span className="text-xs text-emerald-400 font-medium">Подключён</span>
+                          </div>
                         </div>
                         <Button
                           variant="outline"
                           onClick={handleDisconnect}
-                          className="w-full border-red-200 text-red-600 hover:bg-red-50 rounded-xl"
+                          className="w-full border-red-500/10 text-red-400 hover:bg-red-500/5 rounded-xl transition-all duration-200"
                         >
                           <LogOut className="w-4 h-4 mr-2" />
                           Отключить аккаунт
@@ -718,13 +771,12 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {/* OAuth button — shown when VK App ID is configured by admin */}
                         {oauthAvailable && (
                           <>
                             <Button
                               onClick={handleOAuthConnect}
                               disabled={oauthConnecting}
-                              className="w-full h-12 bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl text-base gap-2"
+                              className="w-full h-12 bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 text-white font-semibold rounded-xl text-base gap-2 transition-all duration-200"
                             >
                               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <rect width="20" height="20" rx="4" fill="white" fillOpacity="0.2"/>
@@ -734,16 +786,16 @@ export default function Home() {
                             </Button>
                             <div className="relative">
                               <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-[#dce1e6]" />
+                                <span className="w-full border-t border-zinc-800" />
                               </div>
                               <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white px-2 text-[#818c99]">или введите токен вручную</span>
+                                <span className="bg-[#09090b] px-2 text-zinc-600">или введите токен вручную</span>
                               </div>
                             </div>
                           </>
                         )}
                         <div className="space-y-2">
-                          <Label htmlFor="token" className="text-[#222]">Токен доступа</Label>
+                          <Label htmlFor="token" className="text-zinc-300">Токен доступа</Label>
                           <Input
                             id="token"
                             type="password"
@@ -751,13 +803,13 @@ export default function Home() {
                             value={token}
                             onChange={e => setToken(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleConnect()}
-                            className="h-11 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl"
+                            className="h-11 border-zinc-800 bg-zinc-900/50 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl text-zinc-100 placeholder:text-zinc-600"
                           />
                         </div>
                         <Button
                           onClick={handleConnect}
                           disabled={connecting}
-                          className="w-full h-11 bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl"
+                          className="w-full h-11 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl transition-all duration-200"
                         >
                           {connecting ? (
                             <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -773,37 +825,37 @@ export default function Home() {
               </div>
 
               <div className="md:col-span-2">
-                <Card className="border-amber-200 bg-[#fffbf0] shadow-sm">
+                <Card className="border-amber-500/10 bg-zinc-950/60 backdrop-blur-xl shadow-xl shadow-violet-500/[0.03] rounded-2xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-amber-800 text-base">
-                      <Info className="w-5 h-5 text-amber-500" />
+                    <CardTitle className="flex items-center gap-2 text-amber-200/90 text-base font-semibold">
+                      <Info className="w-5 h-5 text-amber-400/80" />
                       Как получить токен
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3 text-sm text-amber-900">
+                  <CardContent className="space-y-3 text-sm text-amber-200/70">
                     <div className="space-y-3">
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-full bg-[#0077FF] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
-                        <p className="leading-snug">Создайте Standalone-приложение на <a href="https://vk.com/editapp?act=create" target="_blank" rel="noopener noreferrer" className="text-[#2a5885] underline">vk.com/editapp</a></p>
+                        <div className="w-6 h-6 rounded-full bg-violet-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                        <p className="leading-snug">Создайте Standalone-приложение на <a href="https://vk.com/editapp?act=create" target="_blank" rel="noopener noreferrer" className="text-violet-400 underline">vk.com/editapp</a></p>
                       </div>
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-full bg-[#0077FF] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-                        <p className="leading-snug">Получите токен через Implicit Flow с правами <code className="bg-white/60 px-1 rounded text-xs">messages</code></p>
+                        <div className="w-6 h-6 rounded-full bg-violet-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                        <p className="leading-snug">Получите токен через Implicit Flow с правами <code className="bg-zinc-900/60 px-1 rounded text-xs">messages</code></p>
                       </div>
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-full bg-[#0077FF] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                        <div className="w-6 h-6 rounded-full bg-violet-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
                         <p className="leading-snug">Скопируйте токен из адресной строки и вставьте в поле</p>
                       </div>
                     </div>
-                    <Separator className="bg-amber-200" />
-                    <div className="bg-white/60 p-3 rounded-lg">
-                      <p className="text-xs text-amber-700">
+                    <Separator className="bg-amber-500/10" />
+                    <div className="bg-zinc-900/40 p-3 rounded-xl">
+                      <p className="text-xs text-amber-200/80">
                         <strong>Важно:</strong> Токен хранится локально и используется только для API ВКонтакте. Не передавайте его третьим лицам.
                       </p>
                     </div>
-                    <div className="bg-white/60 p-3 rounded-lg space-y-1">
-                      <p className="text-xs text-amber-700 font-semibold">Пример URL для получения токена:</p>
-                      <code className="text-[10px] break-all leading-relaxed block text-amber-800">
+                    <div className="bg-zinc-900/40 p-3 rounded-xl space-y-1">
+                      <p className="text-xs text-amber-200/80 font-semibold">Пример URL для получения токена:</p>
+                      <code className="text-[10px] break-all leading-relaxed block text-amber-200/60">
                         https://oauth.vk.com/authorize?client_id=ВАШ_ID&display=page&redirect_uri=https://oauth.vk.com/blank.html&scope=messages&response_type=token
                       </code>
                     </div>
@@ -815,17 +867,17 @@ export default function Home() {
 
           {/* ===== CHATS TAB ===== */}
           <TabsContent value="chats" className="flex-1 min-h-0 mt-0">
-            <Card className="border-[#dce1e6]/50 shadow-sm h-full flex flex-col">
+            <Card className="border-zinc-800/60 bg-zinc-950/60 backdrop-blur-xl shadow-xl shadow-violet-500/[0.03] rounded-2xl h-full flex flex-col">
               <CardHeader className="pb-3 flex-shrink-0">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-[#222]">
-                      <div className="w-8 h-8 rounded-lg bg-[#0077FF]/10 flex items-center justify-center">
-                        <Users className="w-4 h-4 text-[#0077FF]" />
+                    <CardTitle className="flex items-center gap-2.5 text-zinc-100 text-base font-semibold">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 flex items-center justify-center">
+                        <Users className="w-4 h-4 text-violet-400" />
                       </div>
                       Чаты ВКонтакте
                     </CardTitle>
-                    <CardDescription className="mt-1 text-[#818c99]">
+                    <CardDescription className="mt-1 text-zinc-500">
                       {selectedChats.length > 0
                         ? `Выбрано ${selectedChats.length} из ${chats.length} чатов`
                         : 'Выберите чаты для отправки сообщений'
@@ -837,7 +889,7 @@ export default function Home() {
                     size="sm"
                     onClick={() => fetchChats(true)}
                     disabled={loadingChats}
-                    className="border-[#0077FF]/30 text-[#0077FF] hover:bg-[#0077FF]/5 rounded-xl"
+                    className="border-violet-500/20 text-violet-400 hover:bg-violet-500/5 rounded-xl transition-all duration-200"
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${loadingChats ? 'animate-spin' : ''}`} />
                     Обновить
@@ -851,41 +903,41 @@ export default function Home() {
                       placeholder="Поиск чатов..."
                       value={chatSearch}
                       onChange={e => setChatSearch(e.target.value)}
-                      className="h-9 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl"
+                      className="h-9 border-zinc-800 bg-zinc-900/50 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl text-zinc-100 placeholder:text-zinc-600"
                     />
                   </div>
                 )}
 
                 {loadingChats ? (
                   <div className="flex items-center justify-center py-16">
-                    <RefreshCw className="w-6 h-6 animate-spin text-[#0077FF]" />
-                    <span className="ml-3 text-[#818c99]">Загрузка чатов...</span>
+                    <RefreshCw className="w-5 h-5 animate-spin text-violet-400" />
+                    <span className="ml-3 text-zinc-500">Загрузка чатов...</span>
                   </div>
                 ) : chats.length === 0 ? (
-                  <div className="text-center py-16 text-[#818c99]">
-                    <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <div className="text-center py-16 text-zinc-500">
+                    <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
                     <p className="text-sm">Чаты не найдены</p>
-                    <p className="text-xs mt-1">Нажмите &quot;Обновить&quot; для загрузки из ВКонтакте</p>
+                    <p className="text-xs mt-1 text-zinc-600">Нажмите &quot;Обновить&quot; для загрузки из ВКонтакте</p>
                   </div>
                 ) : (
                   <ScrollArea className="flex-1 min-h-0">
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       {filteredChats.map(chat => (
                         <div
                           key={chat.id}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
                             chat.isSelected
-                              ? 'bg-[#e1f0ff] border border-[#b3d4ff]'
-                              : 'hover:bg-gray-50 border border-transparent'
+                              ? 'bg-violet-500/5 border border-violet-500/10'
+                              : 'hover:bg-zinc-800/30 border border-transparent'
                           }`}
                           onClick={() => toggleChatSelection(chat.id, !chat.isSelected)}
                         >
-                          <Avatar className="w-10 h-10">
+                          <Avatar className="w-9 h-9 rounded-full">
                             {chat.photo && <AvatarImage src={chat.photo} />}
                             <AvatarFallback className={
                               chat.chatType === 'group'
-                                ? 'bg-[#0077FF]/10 text-[#0077FF]'
-                                : 'bg-purple-50 text-purple-600'
+                                ? 'bg-violet-500/10 text-violet-400 rounded-full'
+                                : 'bg-violet-500/5 text-violet-300 rounded-full'
                             }>
                               {chat.chatType === 'group' ? (
                                 <Users className="w-4 h-4" />
@@ -895,15 +947,15 @@ export default function Home() {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-[#222] truncate">{chat.title}</p>
-                            <p className="text-xs text-[#818c99]">
-                              {chat.chatType === 'group' ? 'Беседа' : 'Личные сообщения'} · {chat.vkPeerId}
+                            <p className="font-medium text-sm text-zinc-200 truncate">{chat.title}</p>
+                            <p className="text-xs text-zinc-600">
+                              {chat.chatType === 'group' ? 'Беседа' : 'ЛС'} · {chat.vkPeerId}
                             </p>
                           </div>
-                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
                             chat.isSelected
-                              ? 'bg-[#0077FF] border-[#0077FF]'
-                              : 'border-gray-300'
+                              ? 'bg-violet-600 border-violet-600'
+                              : 'border-zinc-700'
                           }`}>
                             {chat.isSelected && <CheckCircle className="w-3 h-3 text-white" />}
                           </div>
@@ -913,14 +965,14 @@ export default function Home() {
                   </ScrollArea>
                 )}
                 {selectedChats.length > 0 && (
-                  <div className="flex-shrink-0 mt-3 p-3 bg-[#e1f0ff] rounded-xl border border-[#b3d4ff] flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-sm text-[#0077FF]">
+                  <div className="flex-shrink-0 mt-3 p-3 bg-violet-500/5 rounded-xl border border-violet-500/10 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-sm text-violet-400">
                       <CheckCircle className="w-4 h-4" />
                       <span className="font-medium">Выбрано {selectedChats.length} чат{selectedChats.length === 1 ? '' : selectedChats.length < 5 ? 'а' : 'ов'}</span>
                     </div>
                     <Button
-                      onClick={() => { setActiveTab('tasks'); setCreateDialogOpen(true); }}
-                      className="bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl h-9"
+                      onClick={() => { setActiveTab('tasks'); openCreateDialog(); }}
+                      className="bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl h-9 transition-all duration-200"
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Запланировать
@@ -937,11 +989,11 @@ export default function Home() {
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-bold text-[#222] flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-[#0077FF]" />
+                  <h2 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
+                    <CalendarDays className="w-5 h-5 text-violet-400" />
                     Запланированные сообщения
                   </h2>
-                  <p className="text-sm text-[#818c99]">
+                  <p className="text-sm text-zinc-500">
                     {tasks.filter(t => t.isActive).length} активных · {tasks.length} всего
                   </p>
                 </div>
@@ -950,62 +1002,87 @@ export default function Home() {
                     variant="outline"
                     size="sm"
                     onClick={runScheduler}
-                    className="border-[#0077FF]/30 text-[#0077FF] hover:bg-[#0077FF]/5 rounded-xl"
+                    className="border-violet-500/20 text-violet-400 hover:bg-violet-500/5 rounded-xl transition-all duration-200"
                   >
                     <Play className="w-4 h-4 mr-2" />
                     Проверить
                   </Button>
                   <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button className="bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl h-9 px-4">
+                      <Button className="bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl h-9 px-4 transition-all duration-200">
                         <Plus className="w-4 h-4 mr-2" />
                         Новая задача
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
-                      <DialogHeader className="flex-shrink-0 bg-[#0077FF] -mx-6 -mt-6 px-6 pt-6 pb-4">
-                        <DialogTitle className="text-white">Новое запланированное сообщение</DialogTitle>
-                        <DialogDescription className="text-white/70">
+                    <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col bg-zinc-950/95 backdrop-blur-xl border-zinc-800 rounded-2xl">
+                      <DialogHeader className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-violet-500 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-2xl">
+                        <DialogTitle className="text-white font-semibold">Новое запланированное сообщение</DialogTitle>
+                        <DialogDescription className="text-white/60">
                           Настройте время и содержание сообщения
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4 overflow-y-auto flex-1 min-h-0">
+                        {/* Multi-chat selection — pill/chips style */}
                         <div className="space-y-2">
-                          <Label className="text-[#222]">Чат *</Label>
-                          <Select value={newTaskChatId} onValueChange={setNewTaskChatId}>
-                            <SelectTrigger className="border-[#dce1e6] focus:border-[#0077FF] rounded-xl">
-                              <SelectValue placeholder="Выберите чат" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {selectedChats.length === 0 ? (
-                                <div className="p-2 text-sm text-[#818c99] text-center">
-                                  Сначала выберите чаты на вкладке &quot;Чаты&quot;
-                                </div>
-                              ) : (
-                                selectedChats.map(chat => (
-                                  <SelectItem key={chat.id} value={chat.id}>
-                                    {chat.title}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
+                          <Label className="text-zinc-300">Чаты *</Label>
+                          {selectedChats.length === 0 ? (
+                            <p className="text-sm text-zinc-500 p-3 bg-zinc-900/40 rounded-xl border border-zinc-800/60">
+                              Сначала выберите чаты на вкладке &quot;Чаты&quot;
+                            </p>
+                          ) : (
+                            <div className="flex flex-wrap gap-1.5 p-2 rounded-xl border border-zinc-800/60 bg-zinc-900/30">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (selectedChatIdsForTask.length === selectedChats.length) {
+                                    setSelectedChatIdsForTask([]);
+                                  } else {
+                                    setSelectedChatIdsForTask(selectedChats.map(c => c.id));
+                                  }
+                                }}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                                  selectedChatIdsForTask.length === selectedChats.length
+                                    ? 'bg-violet-600 text-white'
+                                    : 'bg-zinc-800/60 text-zinc-400 hover:bg-zinc-700/60'
+                                }`}
+                              >
+                                Все ({selectedChats.length})
+                              </button>
+                              {selectedChats.map(chat => (
+                                <button
+                                  key={chat.id}
+                                  type="button"
+                                  onClick={() => toggleChatInTask(chat.id)}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 max-w-[160px] ${
+                                    selectedChatIdsForTask.includes(chat.id)
+                                      ? 'bg-violet-600 text-white'
+                                      : 'bg-zinc-800/60 text-zinc-400 hover:bg-zinc-700/60'
+                                  }`}
+                                >
+                                  <span className="truncate">{chat.title}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {selectedChatIdsForTask.length > 0 && (
+                            <p className="text-xs text-violet-400">Выбрано: {selectedChatIdsForTask.length} чат{selectedChatIdsForTask.length === 1 ? '' : selectedChatIdsForTask.length < 5 ? 'а' : 'ов'}</p>
+                          )}
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[#222]">Текст сообщения *</Label>
+                          <Label className="text-zinc-300">Текст сообщения *</Label>
                           <Textarea
                             placeholder="Введите текст сообщения..."
                             value={newTaskMessage}
                             onChange={e => setNewTaskMessage(e.target.value)}
                             rows={3}
-                            className="max-h-32 overflow-y-auto border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl"
+                            className="max-h-32 overflow-y-auto border-zinc-800 bg-zinc-900/50 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl text-zinc-100 placeholder:text-zinc-600"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-[#222]">Тип расписания</Label>
+                            <Label className="text-zinc-300">Тип расписания</Label>
                             <Select value={newTaskScheduleType} onValueChange={setNewTaskScheduleType}>
-                              <SelectTrigger className="border-[#dce1e6] rounded-xl">
+                              <SelectTrigger className="border-zinc-800 bg-zinc-900/50 rounded-xl text-zinc-100">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1018,21 +1095,21 @@ export default function Home() {
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[#222]">{newTaskScheduleType === 'interval' ? 'Начать с' : 'Дата и время'}</Label>
+                            <Label className="text-zinc-300">{newTaskScheduleType === 'interval' ? 'Начать с' : 'Дата и время'}</Label>
                             <Input
                               type="datetime-local"
                               value={newTaskScheduledAt}
                               onChange={e => setNewTaskScheduledAt(e.target.value)}
                               min={getMinDateTime()}
-                              className="border-[#dce1e6] focus:border-[#0077FF] rounded-xl"
+                              className="border-zinc-800 bg-zinc-900/50 focus:border-violet-500 rounded-xl text-zinc-100"
                             />
                           </div>
                         </div>
                         {newTaskScheduleType === 'interval' && (
                           <div className="space-y-2">
-                            <Label className="text-[#222]">Интервал отправки</Label>
+                            <Label className="text-zinc-300">Интервал отправки</Label>
                             <Select value={newTaskInterval} onValueChange={setNewTaskInterval}>
-                              <SelectTrigger className="border-[#dce1e6] rounded-xl">
+                              <SelectTrigger className="border-zinc-800 bg-zinc-900/50 rounded-xl text-zinc-100">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1045,9 +1122,9 @@ export default function Home() {
                         )}
                         {newTaskScheduleType === 'weekly' && (
                           <div className="space-y-2">
-                            <Label className="text-[#222]">День недели</Label>
+                            <Label className="text-zinc-300">День недели</Label>
                             <Select value={newTaskDayOfWeek} onValueChange={setNewTaskDayOfWeek}>
-                              <SelectTrigger className="border-[#dce1e6] rounded-xl"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="border-zinc-800 bg-zinc-900/50 rounded-xl text-zinc-100"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {DAYSOfWeek.map((day, i) => (
                                   <SelectItem key={i} value={String(i)}>{day}</SelectItem>
@@ -1058,9 +1135,9 @@ export default function Home() {
                         )}
                         {newTaskScheduleType === 'monthly' && (
                           <div className="space-y-2">
-                            <Label className="text-[#222]">День месяца</Label>
+                            <Label className="text-zinc-300">День месяца</Label>
                             <Select value={newTaskDayOfMonth} onValueChange={setNewTaskDayOfMonth}>
-                              <SelectTrigger className="border-[#dce1e6] rounded-xl"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="border-zinc-800 bg-zinc-900/50 rounded-xl text-zinc-100"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                                   <SelectItem key={d} value={String(d)}>{d}</SelectItem>
@@ -1069,12 +1146,12 @@ export default function Home() {
                             </Select>
                           </div>
                         )}
-                        <div className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200">
+                        <div className="flex items-center justify-between p-3 bg-amber-500/5 rounded-xl border border-amber-500/10">
                           <div className="flex items-center gap-2">
-                            <Trash className="w-4 h-4 text-amber-600" />
+                            <Trash className="w-4 h-4 text-amber-400/80" />
                             <div>
-                              <Label className="text-sm font-medium text-amber-900 cursor-pointer">Удалить предыдущее</Label>
-                              <p className="text-xs text-amber-700">Перед отправкой удалять прошлое сообщение</p>
+                              <Label className="text-sm font-medium text-amber-200/80 cursor-pointer">Удалить предыдущее</Label>
+                              <p className="text-xs text-amber-400/50">Перед отправкой удалять прошлое сообщение</p>
                             </div>
                           </div>
                           <Switch
@@ -1083,9 +1160,9 @@ export default function Home() {
                           />
                         </div>
                       </div>
-                      <DialogFooter className="flex-shrink-0 pt-2 border-t border-[#dce1e6]">
-                        <Button variant="outline" onClick={() => setCreateDialogOpen(false)} className="rounded-xl">Отмена</Button>
-                        <Button onClick={handleCreateTask} disabled={creating} className="bg-[#0077FF] hover:bg-[#0066dd] text-white rounded-xl">
+                      <DialogFooter className="flex-shrink-0 pt-2 border-t border-zinc-800">
+                        <Button variant="outline" onClick={() => setCreateDialogOpen(false)} className="rounded-xl border-zinc-800 text-zinc-300 hover:bg-zinc-800/50 transition-all duration-200">Отмена</Button>
+                        <Button onClick={handleCreateTask} disabled={creating} className="bg-violet-600 hover:bg-violet-500 text-white rounded-xl transition-all duration-200">
                           {creating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
                           {creating ? 'Создание...' : 'Запланировать'}
                         </Button>
@@ -1096,77 +1173,88 @@ export default function Home() {
               </div>
 
               {tasks.length === 0 ? (
-                <Card className="border-[#dce1e6]/50 shadow-sm">
-                  <CardContent className="py-16 text-center text-[#818c99]">
-                    <CalendarDays className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <Card className="border-zinc-800/60 bg-zinc-950/60 backdrop-blur-xl rounded-2xl">
+                  <CardContent className="py-16 text-center text-zinc-500">
+                    <CalendarDays className="w-12 h-12 mx-auto mb-3 opacity-20" />
                     <p>Нет запланированных сообщений</p>
-                    <p className="text-xs mt-1">Нажмите &quot;Новая задача&quot; для создания</p>
+                    <p className="text-xs mt-1 text-zinc-600">Нажмите &quot;Новая задача&quot; для создания</p>
                   </CardContent>
                 </Card>
               ) : (
                 <div className="grid gap-2">
-                  {tasks.map(task => (
-                    <Card key={task.id} className={`border-[#dce1e6]/50 shadow-sm ${!task.isActive ? 'opacity-50' : ''}`}>
-                      <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0 space-y-1.5">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {getStatusBadge(task.status)}
-                              <Badge variant="outline" className="text-xs border-[#0077FF]/30 text-[#0077FF] font-medium">
-                                {SCHEDULE_LABELS[task.scheduleType] || task.scheduleType}
-                                {task.scheduleType === 'interval' && task.intervalMinutes
-                                  ? ` — ${formatInterval(task.intervalMinutes)}`
-                                  : ''}
-                              </Badge>
-                              {task.chat && (
-                                <Badge variant="secondary" className="text-xs font-medium">
-                                  {task.chat.title}
+                  {tasks.map(task => {
+                    const statusInfo = getStatusIndicator(task.status);
+                    return (
+                      <Card key={task.id} className={`border-zinc-800/60 bg-zinc-950/60 backdrop-blur-xl rounded-2xl ${!task.isActive ? 'opacity-50' : ''} ${
+                        task.status === 'sent' ? 'border-l-status-sent' :
+                        task.status === 'pending' ? 'border-l-status-pending' :
+                        task.status === 'failed' ? 'border-l-status-failed' :
+                        'border-l-status-disabled'
+                      }`}>
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <div className="flex items-center gap-1.5">
+                                  <div className={`timeline-dot ${statusInfo.dot}`} />
+                                  <span className={`text-xs font-medium ${statusInfo.cls}`}>{statusInfo.label}</span>
+                                </div>
+                                <Badge variant="outline" className="text-xs border-violet-500/20 text-violet-400 font-medium bg-violet-500/5">
+                                  {SCHEDULE_LABELS[task.scheduleType] || task.scheduleType}
+                                  {task.scheduleType === 'interval' && task.intervalMinutes
+                                    ? ` — ${formatInterval(task.intervalMinutes)}`
+                                    : ''}
                                 </Badge>
-                              )}
-                              {task.deletePrevious && (
-                                <Badge className="text-xs bg-amber-50 text-amber-700 border border-amber-200 font-medium">
-                                  <Trash className="w-3 h-3 mr-1" />
-                                  Удал. пред.
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-[#222] break-words line-clamp-2">{task.messageText}</p>
-                            <div className="flex items-center gap-3 text-xs text-[#818c99]">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {new Date(task.scheduledAt).toLocaleString('ru-RU')}
-                              </span>
-                              {task.lastSentAt && (
+                                {task.chat && (
+                                  <Badge variant="secondary" className="text-xs font-medium bg-zinc-800/60 text-zinc-300">
+                                    {task.chat.title}
+                                  </Badge>
+                                )}
+                                {task.deletePrevious && (
+                                  <Badge className="text-xs bg-amber-500/5 text-amber-400 border border-amber-500/10 font-medium">
+                                    <Trash className="w-3 h-3 mr-1" />
+                                    Удал. пред.
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-zinc-200 break-words line-clamp-2">{task.messageText}</p>
+                              <div className="flex items-center gap-3 text-xs text-zinc-500">
                                 <span className="flex items-center gap-1">
-                                  <CheckCircle className="w-3 h-3" />
-                                  {new Date(task.lastSentAt).toLocaleString('ru-RU')}
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(task.scheduledAt).toLocaleString('ru-RU')}
                                 </span>
-                              )}
+                                {task.lastSentAt && (
+                                  <span className="flex items-center gap-1">
+                                    <CheckCircle className="w-3 h-3" />
+                                    {new Date(task.lastSentAt).toLocaleString('ru-RU')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-0.5 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-zinc-500 hover:text-violet-400 hover:bg-violet-500/5 rounded-lg transition-all duration-200"
+                                onClick={() => toggleTaskActive(task.id, !task.isActive)}
+                                title={task.isActive ? 'Приостановить' : 'Активировать'}
+                              >
+                                {task.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-zinc-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg transition-all duration-200"
+                                onClick={() => deleteTask(task.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-[#818c99] hover:text-[#0077FF]"
-                              onClick={() => toggleTaskActive(task.id, !task.isActive)}
-                              title={task.isActive ? 'Приостановить' : 'Активировать'}
-                            >
-                              {task.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-[#818c99] hover:text-red-500"
-                              onClick={() => deleteTask(task.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1174,17 +1262,17 @@ export default function Home() {
 
           {/* ===== LOGS TAB ===== */}
           <TabsContent value="logs" className="flex-1 min-h-0 mt-0">
-            <Card className="border-[#dce1e6]/50 shadow-sm h-full flex flex-col">
+            <Card className="border-zinc-800/60 bg-zinc-950/60 backdrop-blur-xl shadow-xl shadow-violet-500/[0.03] rounded-2xl h-full flex flex-col">
               <CardHeader className="pb-3 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-[#222]">
-                      <div className="w-8 h-8 rounded-lg bg-[#0077FF]/10 flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-[#0077FF]" />
+                    <CardTitle className="flex items-center gap-2.5 text-zinc-100 text-base font-semibold">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 flex items-center justify-center">
+                        <Activity className="w-4 h-4 text-violet-400" />
                       </div>
                       Журнал отправок
                     </CardTitle>
-                    <CardDescription className="mt-1 text-[#818c99]">
+                    <CardDescription className="mt-1 text-zinc-500">
                       История отправленных сообщений и ошибок
                     </CardDescription>
                   </div>
@@ -1192,7 +1280,7 @@ export default function Home() {
                     variant="outline"
                     size="sm"
                     onClick={fetchLogs}
-                    className="border-[#0077FF]/30 text-[#0077FF] hover:bg-[#0077FF]/5 rounded-xl"
+                    className="border-violet-500/20 text-violet-400 hover:bg-violet-500/5 rounded-xl transition-all duration-200"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Обновить
@@ -1201,43 +1289,46 @@ export default function Home() {
               </CardHeader>
               <CardContent className="flex-1 min-h-0 flex flex-col pt-0">
                 {logs.length === 0 ? (
-                  <div className="text-center py-16 text-[#818c99]">
-                    <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <div className="text-center py-16 text-zinc-500">
+                    <Activity className="w-12 h-12 mx-auto mb-3 opacity-20" />
                     <p>Журнал пуст</p>
-                    <p className="text-xs mt-1">Записи появятся после отправки сообщений</p>
+                    <p className="text-xs mt-1 text-zinc-600">Записи появятся после отправки сообщений</p>
                   </div>
                 ) : (
                   <ScrollArea className="flex-1 min-h-0">
-                    <div className="space-y-1.5">
-                      {logs.map(log => (
-                        <div key={log.id} className={`flex items-start gap-3 p-2.5 rounded-xl border ${
-                          log.status === 'sent'
-                            ? 'bg-green-50 border-green-200/50'
-                            : 'bg-red-50 border-red-200/50'
-                        }`}>
-                          {log.status === 'sent' ? (
-                            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-sm font-medium text-[#222] truncate">
-                                {log.task?.chat?.title || 'Чат'}
+                    <div className="relative pl-5">
+                      {/* Timeline line */}
+                      <div className="absolute left-[7px] top-2 bottom-2 w-px bg-zinc-800/60" />
+                      <div className="space-y-3">
+                        {logs.map(log => (
+                          <div key={log.id} className="relative flex items-start gap-3">
+                            {/* Timeline dot */}
+                            <div className={`timeline-dot absolute left-[-13px] top-3 z-10 ${
+                              log.status === 'sent' ? 'bg-emerald-500' : 'bg-red-500'
+                            }`} />
+                            <div className={`flex-1 p-2.5 rounded-xl border ${
+                              log.status === 'sent'
+                                ? 'bg-emerald-500/5 border-emerald-500/10'
+                                : 'bg-red-500/5 border-red-500/10'
+                            }`}>
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-sm font-medium text-zinc-200 truncate">
+                                  {log.task?.chat?.title || 'Чат'}
+                                </p>
+                                <span className="text-[11px] text-zinc-600 whitespace-nowrap">
+                                  {new Date(log.sentAt).toLocaleString('ru-RU')}
+                                </span>
+                              </div>
+                              <p className="text-xs text-zinc-500 mt-0.5 truncate">
+                                {log.task?.messageText || '—'}
                               </p>
-                              <span className="text-[11px] text-[#818c99] whitespace-nowrap">
-                                {new Date(log.sentAt).toLocaleString('ru-RU')}
-                              </span>
+                              {log.error && (
+                                <p className="text-xs text-red-400 mt-0.5">{log.error}</p>
+                              )}
                             </div>
-                            <p className="text-xs text-[#818c99] mt-0.5 truncate">
-                              {log.task?.messageText || '—'}
-                            </p>
-                            {log.error && (
-                              <p className="text-xs text-red-600 mt-0.5">{log.error}</p>
-                            )}
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </ScrollArea>
                 )}
@@ -1247,15 +1338,15 @@ export default function Home() {
         </Tabs>
       </main>
 
-      {/* Footer — VK Style */}
-      <footer className="bg-white border-t border-[#dce1e6]/50 flex-shrink-0">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-between text-[11px] text-[#818c99]">
-          <span>VK Messages — Автоматическая отправка сообщений</span>
+      {/* Footer — Minimal */}
+      <footer className="bg-zinc-950/60 backdrop-blur-xl border-t border-zinc-800/60 flex-shrink-0">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-between text-[11px] text-zinc-600">
+          <span>VK Messages</span>
           <span className="flex items-center gap-2">
             {connected ? (
               <>
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                Подключён
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="text-zinc-500">Подключён</span>
               </>
             ) : 'Не подключён'}
           </span>
