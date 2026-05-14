@@ -45,24 +45,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: 'linear-gradient(180deg, #edeef0 0%, #ffffff 100%)' }}
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{ background: 'linear-gradient(180deg, #09090b 0%, #0f0f14 100%)' }}
     >
-      {/* VK Logo */}
-      <div className="mb-8 flex flex-col items-center">
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-          <rect width="56" height="56" rx="12" fill="#0077FF"/>
-          <path d="M14 20h5c.6 0 1 .4 1.2.8.8 2 2.4 5.6 4 6.4.6.4.8 0 .8-.6v-4c0-1.4-.6-2.6-.6-2.6s-.4-.6-1-.6c-.4 0-.6-.4-.4-.6.2-.4.8-.8 1.6-.8h4c.8 0 1.4.6 1.4 1.4v6c0 .6.4 1 .8.6 1.2-.8 3-4 4.2-6.6.2-.6.6-.8 1-.8h4.4c.8 0 1.4.8 1 1.6-1.6 3-4.2 7-5.4 8.2-.6.6-.4 1.2 0 1.8 1.4 1.4 4 4.2 5 5.6.4.6.2 1.4-.6 1.4h-5c-.6 0-1-.2-1.4-.6-1-1-2.6-2.8-3.6-2.8-.4 0-.8.2-.8 1v1.4c0 .6-.4 1-1 1h-3c-5 0-9-7-11.6-13-.4-.6 0-1.2.6-1.2z" fill="white"/>
-        </svg>
-        <h1 className="mt-4 text-2xl font-bold text-[#222]">VK Messages</h1>
-        <p className="mt-1 text-sm text-[#818c99]">Автоматическая отправка сообщений ВКонтакте</p>
+      {/* Decorative glow */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-violet-500/[0.04] rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Logo */}
+      <div className="mb-8 flex flex-col items-center relative">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-xl shadow-violet-500/20">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M7 10h2.5c.3 0 .5.2.6.4.4 1 1.2 2.8 2 3.2.3.2.4 0 .4-.3v-2c0-.7-.3-1.3-.3-1.3s-.2-.3-.5-.3c-.2 0-.3-.2-.2-.3.1-.2.4-.4.8-.4h2c.4 0 .7.3.7.7v3c0 .3.2.5.4.3.6-.4 1.5-2 2.1-3.3.1-.3.3-.4.5-.4h2.2c.4 0 .7.4.5.8-.8 1.5-2.1 3.5-2.7 4.1-.3.3-.2.6 0 .9.7.7 2 2.1 2.5 2.8.2.3.1.7-.3.7h-2.5c-.3 0-.5-.1-.7-.3-.5-.5-1.3-1.4-1.8-1.4-.2 0-.4.1-.4.5v.7c0 .3-.2.5-.5.5h-1.5c-2.5 0-4.5-3.5-5.8-6.5-.2-.3 0-.6.3-.6z" fill="white"/>
+          </svg>
+        </div>
+        <h1 className="mt-4 text-2xl font-bold text-zinc-50">VK Messages</h1>
+        <p className="mt-1 text-sm text-zinc-500">Автоматическая отправка сообщений ВКонтакте</p>
       </div>
 
       {/* Auth Card */}
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg border border-[#dce1e6] overflow-hidden">
+      <div className="w-full max-w-sm rounded-2xl border border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl shadow-2xl shadow-violet-500/[0.03] overflow-hidden relative">
         {/* Card Header */}
         <div className="px-6 pt-6 pb-2">
-          <h2 className="text-xl font-bold text-[#222] text-center">
+          <h2 className="text-xl font-semibold text-zinc-50 text-center">
             {mode === 'login' ? 'Вход' : 'Регистрация'}
           </h2>
         </div>
@@ -71,20 +76,20 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="px-6 pb-6 pt-2 space-y-4">
           {mode === 'register' && (
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[#222] text-sm font-medium">Имя</Label>
+              <Label htmlFor="name" className="text-zinc-300 text-sm font-medium">Имя</Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="Ваше имя"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="h-11 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl text-[#222] placeholder:text-[#818c99]"
+                className="h-11 border-zinc-800 bg-zinc-900/50 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl text-zinc-50 placeholder:text-zinc-600"
               />
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-[#222] text-sm font-medium">Email</Label>
+            <Label htmlFor="email" className="text-zinc-300 text-sm font-medium">Email</Label>
             <Input
               id="email"
               type="email"
@@ -92,12 +97,12 @@ export default function LoginPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="h-11 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl text-[#222] placeholder:text-[#818c99]"
+              className="h-11 border-zinc-800 bg-zinc-900/50 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl text-zinc-50 placeholder:text-zinc-600"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-[#222] text-sm font-medium">Пароль</Label>
+            <Label htmlFor="password" className="text-zinc-300 text-sm font-medium">Пароль</Label>
             <Input
               id="password"
               type="password"
@@ -106,12 +111,12 @@ export default function LoginPage() {
               onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
-              className="h-11 border-[#dce1e6] focus:border-[#0077FF] focus:ring-[#0077FF]/20 rounded-xl text-[#222] placeholder:text-[#818c99]"
+              className="h-11 border-zinc-800 bg-zinc-900/50 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl text-zinc-50 placeholder:text-zinc-600"
             />
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
+            <div className="text-sm text-red-400 bg-red-500/5 border border-red-500/10 rounded-xl px-4 py-2.5">
               {error}
             </div>
           )}
@@ -119,7 +124,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-[#0077FF] hover:bg-[#0066dd] text-white font-semibold rounded-xl text-base"
+            className="w-full h-11 bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 text-white font-semibold rounded-xl text-base transition-all duration-200"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -137,14 +142,14 @@ export default function LoginPage() {
 
         {/* Switch Mode */}
         <div className="px-6 pb-6 pt-0">
-          <div className="border-t border-[#dce1e6] pt-4 text-center">
-            <p className="text-sm text-[#818c99]">
+          <div className="border-t border-zinc-800/80 pt-4 text-center">
+            <p className="text-sm text-zinc-500">
               {mode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}
               {' '}
               <button
                 type="button"
                 onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
-                className="text-[#0077FF] hover:text-[#0066dd] font-semibold hover:underline"
+                className="text-violet-400 hover:text-violet-300 font-semibold hover:underline transition-colors"
               >
                 {mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
               </button>
@@ -154,9 +159,11 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <p className="mt-6 text-xs text-[#818c99]">
-        VK Messages © {new Date().getFullYear()}
-      </p>
+      <div className="mt-6 flex items-center gap-3 text-xs text-zinc-600">
+        <a href="/download" className="text-violet-400 hover:text-violet-300 hover:underline transition-colors">Скачать проект</a>
+        <span>·</span>
+        <span>VK Messages © {new Date().getFullYear()}</span>
+      </div>
     </div>
   );
 }
