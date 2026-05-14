@@ -52,12 +52,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
 
-    const { chatId, chatIds, messageText, scheduleType, scheduledAt, dayOfWeek, dayOfMonth, intervalMinutes, deletePrevious } = await request.json();
+    const { chatId, messageText, scheduleType, scheduledAt, dayOfWeek, dayOfMonth, intervalMinutes, deletePrevious } = await request.json();
 
-    // Support both single chatId and multiple chatIds
-    const targetChatIds = chatIds && chatIds.length > 0 ? chatIds : (chatId ? [chatId] : []);
-
-    if (targetChatIds.length === 0 || !messageText || !scheduleType || !scheduledAt) {
+    if (!chatId || !messageText || !scheduleType || !scheduledAt) {
       return NextResponse.json({ error: 'Заполните все обязательные поля' }, { status: 400 });
     }
 
@@ -65,41 +62,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Укажите интервал (минимум 1 минута)' }, { status: 400 });
     }
 
-    const createdTasks = [];
-    for (const cid of targetChatIds) {
-      // Verify the chat belongs to the user
-      const chat = await db.vkChat.findUnique({
-        where: { id: cid },
-        include: { connection: true },
-      });
+    // Verify the chat belongs to the user
+    const chat = await db.vkChat.findUnique({
+      where: { id: chatId },
+      include: { connection: true },
+    });
 
-      if (!chat || chat.connection.ownerId !== user.id) continue;
-
-      const task = await db.scheduledTask.create({
-        data: {
-          chatId: cid,
-          messageText,
-          scheduleType,
-          scheduledAt: new Date(scheduledAt),
-          dayOfWeek: dayOfWeek ?? null,
-          dayOfMonth: dayOfMonth ?? null,
-          intervalMinutes: scheduleType === 'interval' ? intervalMinutes : null,
-          deletePrevious: deletePrevious === true,
-          status: 'pending',
-          isActive: true,
-        },
-        include: {
-          chat: true,
-        },
-      });
-      createdTasks.push(task);
+    if (!chat || chat.connection.ownerId !== user.id) {
+      return NextResponse.json({ error: 'Чат не найден' }, { status: 404 });
     }
 
-    if (createdTasks.length === 0) {
-      return NextResponse.json({ error: 'Не удалось создать задачи. Проверьте выбранные чаты.' }, { status: 400 });
-    }
+    const task = await db.scheduledTask.create({
+      data: {
+        chatId,
+        messageText,
+        scheduleType,
+        scheduledAt: new Date(scheduledAt),
+        dayOfWeek: dayOfWeek ?? null,
+        dayOfMonth: dayOfMonth ?? null,
+        intervalMinutes: scheduleType === 'interval' ? intervalMinutes : null,
+        deletePrevious: deletePrevious === true,
+        status: 'pending',
+        isActive: true,
+      },
+      include: {
+        chat: true,
+      },
+    });
 
-    return NextResponse.json({ tasks: createdTasks, count: createdTasks.length });
+    return NextResponse.json({ task });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Ошибка создания задачи';
     return NextResponse.json({ error: message }, { status: 500 });
