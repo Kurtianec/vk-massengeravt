@@ -44,37 +44,38 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #e6e9f0;
-  --foreground: #1a1a2e;
-  --card: #ffffff;
-  --card-foreground: #1a1a2e;
-  --popover: #ffffff;
-  --popover-foreground: #1a1a2e;
-  --primary: #0059D6;
-  --primary-foreground: #ffffff;
-  --secondary: #e6e9f0;
-  --secondary-foreground: #1a1a2e;
-  --muted: #e6e9f0;
-  --muted-foreground: #6b7280;
-  --accent: #d0e3ff;
-  --accent-foreground: #1a1a2e;
-  --destructive: #dc2626;
-  --border: #c8d0da;
-  --input: #c8d0da;
-  --ring: #0059D6;
-  --chart-1: #0059D6;
-  --chart-2: #16a34a;
-  --chart-3: #f59e0b;
-  --chart-4: #dc2626;
-  --chart-5: #7c3aed;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1a1a2e;
-  --sidebar-primary: #0059D6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #d0e3ff;
-  --sidebar-accent-foreground: #1a1a2e;
-  --sidebar-border: #c8d0da;
-  --sidebar-ring: #0059D6;
+  /* Cyberpunk dark palette */
+  --background: #0d0d1a;
+  --foreground: #e0e0ff;
+  --card: #141428;
+  --card-foreground: #e0e0ff;
+  --popover: #1a1a35;
+  --popover-foreground: #e0e0ff;
+  --primary: #00f0ff;
+  --primary-foreground: #0d0d1a;
+  --secondary: #1a1a35;
+  --secondary-foreground: #e0e0ff;
+  --muted: #1a1a35;
+  --muted-foreground: #7a7aaa;
+  --accent: #ff00e5;
+  --accent-foreground: #ffffff;
+  --destructive: #ff2d55;
+  --border: #2a2a4a;
+  --input: #2a2a4a;
+  --ring: #00f0ff;
+  --chart-1: #00f0ff;
+  --chart-2: #39ff14;
+  --chart-3: #ffe600;
+  --chart-4: #ff2d55;
+  --chart-5: #ff00e5;
+  --sidebar: #141428;
+  --sidebar-foreground: #e0e0ff;
+  --sidebar-primary: #00f0ff;
+  --sidebar-primary-foreground: #0d0d1a;
+  --sidebar-accent: #ff00e5;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2a2a4a;
+  --sidebar-ring: #00f0ff;
 }
 
 @layer base {
@@ -86,26 +87,26 @@
   }
 }
 
-/* Mobile dialog fix: prevent dialog from being pushed off-screen by virtual keyboard */
+/* Mobile dialog fix */
 @media (max-width: 640px) {
   [data-radix-presenter-layer] {
     max-height: 100dvh !important;
   }
 }
 
-/* Custom scrollbar for VK style */
+/* Cyberpunk scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(20, 20, 40, 0.5);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #c4c4c4;
+  background: #00f0ff44;
   border-radius: 3px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #a0a0a0;
+  background: #00f0ff88;
 }
 
 /* Line clamp utility */
@@ -114,4 +115,20 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Cyberpunk neon glow utilities */
+.neon-glow-cyan {
+  box-shadow: 0 0 8px #00f0ff44, 0 0 20px #00f0ff22;
+}
+.neon-glow-pink {
+  box-shadow: 0 0 8px #ff00e544, 0 0 20px #ff00e522;
+}
+.neon-border-cyan {
+  border-color: #00f0ff66;
+  box-shadow: 0 0 6px #00f0ff33;
+}
+.neon-border-pink {
+  border-color: #ff00e566;
+  box-shadow: 0 0 6px #ff00e533;
 }
