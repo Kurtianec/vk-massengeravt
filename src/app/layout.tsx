@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <body
-        className="antialiased bg-[#0d0d1a] text-[#e0e0ff]"
+        className="antialiased bg-[#E7E8EC] text-black"
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif' }}
       >
         {children}

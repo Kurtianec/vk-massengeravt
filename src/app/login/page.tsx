@@ -45,33 +45,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: 'linear-gradient(180deg, #0d0d1a 0%, #1a0a2e 50%, #0d0d1a 100%)' }}
-    >
-      {/* Cyberpunk Logo */}
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-[#E7E8EC]">
+      {/* Telegram-style Logo */}
       <div className="mb-8 flex flex-col items-center">
         <div className="relative">
-          <div className="absolute inset-0 blur-xl bg-[#00f0ff]/30 rounded-full" />
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" className="relative">
-            <rect width="64" height="64" rx="14" fill="#141428" stroke="#00f0ff" strokeWidth="2"/>
-            {/* Message/chat icon like Telegram */}
-            <path d="M16 20h32c2.2 0 4 1.8 4 4v16c0 2.2-1.8 4-4 4H28l-6 5v-5h-6c-2.2 0-4-1.8-4-4V24c0-2.2 1.8-4 4-4z" fill="none" stroke="#00f0ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M22 28h20M22 34h14" stroke="#ff00e5" strokeWidth="2" strokeLinecap="round"/>
-            {/* Small send arrow */}
-            <path d="M42 30l6 3-6 3" stroke="#00f0ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <div className="absolute inset-0 blur-2xl bg-[#2AABEE]/20 rounded-full" />
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none" className="relative">
+            <circle cx="40" cy="40" r="40" fill="#2AABEE"/>
+            {/* Paper plane / send icon like Telegram */}
+            <path d="M55 25L45 55C44.7 55.8 43.6 56.1 43 55.5L35 48L30 50C29.5 50.2 29 49.8 29.1 49.3L32 38L52 24C52.5 23.6 53.1 24.1 52.9 24.7L46 42L55 25Z" fill="white" stroke="white" strokeWidth="0.5" strokeLinejoin="round"/>
+            <path d="M32 38L44 28C44.3 27.7 44.7 28.1 44.4 28.4L35 48" fill="white" stroke="white" strokeWidth="0.5" strokeLinejoin="round"/>
           </svg>
         </div>
-        <h1 className="mt-5 text-3xl font-bold text-[#e0e0ff]" style={{ textShadow: '0 0 20px #00f0ff66' }}>
+        <h1 className="mt-5 text-2xl font-bold text-black">
           Messages pull
         </h1>
-        <p className="mt-2 text-sm text-[#7a7aaa]">Автоматическая отправка сообщений по расписанию</p>
+        <p className="mt-1.5 text-sm text-[#707579]">Автоматическая отправка сообщений по расписанию</p>
       </div>
 
       {/* Auth Card */}
-      <div className="w-full max-w-sm bg-[#141428] rounded-2xl shadow-lg border border-[#2a2a4a] overflow-hidden neon-border-cyan">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg overflow-hidden border border-[#E0E0E0]">
         {/* Card Header */}
         <div className="px-6 pt-6 pb-2">
-          <h2 className="text-xl font-bold text-[#e0e0ff] text-center">
+          <h2 className="text-xl font-bold text-black text-center">
             {mode === 'login' ? 'Вход' : 'Регистрация'}
           </h2>
         </div>
@@ -80,20 +76,20 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="px-6 pb-6 pt-2 space-y-4">
           {mode === 'register' && (
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[#e0e0ff] text-sm font-medium">Имя</Label>
+              <Label htmlFor="name" className="text-black text-sm font-medium">Имя</Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="Ваше имя"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="h-11 bg-[#1a1a35] border-[#2a2a4a] focus:border-[#00f0ff] focus:ring-[#00f0ff]/20 rounded-xl text-[#e0e0ff] placeholder:text-[#7a7aaa]"
+                className="h-11 bg-[#F0F2F5] border-[#E0E0E0] focus:border-[#2AABEE] focus:ring-[#2AABEE]/20 rounded-xl text-black placeholder:text-[#9E9E9E]"
               />
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-[#e0e0ff] text-sm font-medium">Email</Label>
+            <Label htmlFor="email" className="text-black text-sm font-medium">Email</Label>
             <Input
               id="email"
               type="email"
@@ -101,12 +97,12 @@ export default function LoginPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="h-11 bg-[#1a1a35] border-[#2a2a4a] focus:border-[#00f0ff] focus:ring-[#00f0ff]/20 rounded-xl text-[#e0e0ff] placeholder:text-[#7a7aaa]"
+              className="h-11 bg-[#F0F2F5] border-[#E0E0E0] focus:border-[#2AABEE] focus:ring-[#2AABEE]/20 rounded-xl text-black placeholder:text-[#9E9E9E]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-[#e0e0ff] text-sm font-medium">Пароль</Label>
+            <Label htmlFor="password" className="text-black text-sm font-medium">Пароль</Label>
             <Input
               id="password"
               type="password"
@@ -115,12 +111,12 @@ export default function LoginPage() {
               onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
-              className="h-11 bg-[#1a1a35] border-[#2a2a4a] focus:border-[#00f0ff] focus:ring-[#00f0ff]/20 rounded-xl text-[#e0e0ff] placeholder:text-[#7a7aaa]"
+              className="h-11 bg-[#F0F2F5] border-[#E0E0E0] focus:border-[#2AABEE] focus:ring-[#2AABEE]/20 rounded-xl text-black placeholder:text-[#9E9E9E]"
             />
           </div>
 
           {error && (
-            <div className="text-sm text-[#ff2d55] bg-[#ff2d55]/10 border border-[#ff2d55]/30 rounded-xl px-4 py-2.5">
+            <div className="text-sm text-[#E53935] bg-[#E53935]/8 border border-[#E53935]/20 rounded-xl px-4 py-2.5">
               {error}
             </div>
           )}
@@ -128,7 +124,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-[#00f0ff] hover:bg-[#00c8d6] text-[#0d0d1a] font-bold rounded-xl text-base neon-glow-cyan"
+            className="w-full h-11 bg-[#2AABEE] hover:bg-[#229ED9] text-white font-bold rounded-xl text-base"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -146,14 +142,14 @@ export default function LoginPage() {
 
         {/* Switch Mode */}
         <div className="px-6 pb-6 pt-0">
-          <div className="border-t border-[#2a2a4a] pt-4 text-center">
-            <p className="text-sm text-[#7a7aaa]">
+          <div className="border-t border-[#E0E0E0] pt-4 text-center">
+            <p className="text-sm text-[#707579]">
               {mode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}
               {' '}
               <button
                 type="button"
                 onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
-                className="text-[#00f0ff] hover:text-[#00c8d6] font-semibold hover:underline"
+                className="text-[#2AABEE] hover:text-[#229ED9] font-semibold hover:underline"
               >
                 {mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
               </button>
@@ -163,7 +159,7 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <p className="mt-6 text-xs text-[#7a7aaa]">
+      <p className="mt-6 text-xs text-[#9E9E9E]">
         Messages pull © {new Date().getFullYear()}
       </p>
     </div>

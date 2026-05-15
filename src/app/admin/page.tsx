@@ -253,13 +253,13 @@ export default function AdminPage() {
 
   if (authLoading) {
     return (
-      <div className="h-screen bg-[#0d0d1a] flex items-center justify-center">
+      <div className="h-screen bg-[#E7E8EC] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <svg className="animate-spin h-8 w-8 text-[#00f0ff]" viewBox="0 0 24 24">
+          <svg className="animate-spin h-8 w-8 text-[#2AABEE]" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
           </svg>
-          <p className="text-sm text-[#7a7aaa]">Загрузка...</p>
+          <p className="text-sm text-[#707579]">Загрузка...</p>
         </div>
       </div>
     );
@@ -268,24 +268,24 @@ export default function AdminPage() {
   if (!authUser) return null;
 
   return (
-    <div className="min-h-screen bg-[#0d0d1a] flex flex-col">
+    <div className="min-h-screen bg-[#E7E8EC] flex flex-col">
       {/* Header */}
-      <header className="bg-[#0d0d1a] border-b border-[#00f0ff33] z-50 flex-shrink-0" style={{ boxShadow: '0 0 20px #00f0ff11' }}>
+      <header className="bg-white border-b border-[#E0E0E0] z-50 flex-shrink-0 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => window.location.href = '/'}
-              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-[#2AABEE] hover:text-[#229ED9] transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-white" />
-              <h1 className="text-white font-bold text-lg leading-none">Админ-панель</h1>
+              <Shield className="w-5 h-5 text-[#2AABEE]" />
+              <h1 className="text-black font-semibold text-lg leading-none">Админ-панель</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge className="bg-[#00f0ff]/20 text-[#0d0d1a] border-0 text-xs">
+            <Badge className="bg-[#2AABEE]/10 text-[#2AABEE] border border-[#2AABEE]/30 text-xs">
               <Shield className="w-3 h-3 mr-1" />
               Администратор
             </Badge>
@@ -296,12 +296,12 @@ export default function AdminPage() {
       {/* Main Content */}
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6 w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-4">
-          <TabsList className="bg-[#141428] rounded-xl shadow-sm border border-[#2a2a4a]/50 h-11 p-1 w-full max-w-md grid grid-cols-2">
-            <TabsTrigger value="users" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#00f0ff] data-[state=active]:text-[#0d0d1a] data-[state=active]:shadow-sm text-[#e0e0ff]">
+          <TabsList className="bg-white rounded-xl shadow-sm border border-[#E0E0E0] h-11 p-1 w-full max-w-md grid grid-cols-2">
+            <TabsTrigger value="users" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#2AABEE] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#707579]">
               <Users className="w-3.5 h-3.5" />
               Пользователи
             </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#00f0ff] data-[state=active]:text-[#0d0d1a] data-[state=active]:shadow-sm text-[#e0e0ff]">
+            <TabsTrigger value="settings" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-[#2AABEE] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#707579]">
               <Settings className="w-3.5 h-3.5" />
               Настройки
             </TabsTrigger>
@@ -311,42 +311,42 @@ export default function AdminPage() {
           <TabsContent value="users" className="mt-4">
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              <div className="bg-[#141428] rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#2a2a4a]/50">
-                <div className="w-9 h-9 rounded-lg bg-[#00f0ff]/20 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-[#00f0ff]" />
+              <div className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#E0E0E0]">
+                <div className="w-9 h-9 rounded-lg bg-[#2AABEE]/10 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-[#2AABEE]" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-[#e0e0ff]">{users.length}</div>
-                  <div className="text-[11px] text-[#7a7aaa]">Пользователей</div>
+                  <div className="text-xl font-bold text-black">{users.length}</div>
+                  <div className="text-[11px] text-[#707579]">Пользователей</div>
                 </div>
               </div>
-              <div className="bg-[#141428] rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#2a2a4a]/50">
-                <div className="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-green-600" />
+              <div className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#E0E0E0]">
+                <div className="w-9 h-9 rounded-lg bg-[#4FAE4E]/10 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-[#4FAE4E]" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-[#e0e0ff]">{users.filter(u => u.role === 'admin').length}</div>
-                  <div className="text-[11px] text-[#7a7aaa]">Администраторов</div>
+                  <div className="text-xl font-bold text-black">{users.filter(u => u.role === 'admin').length}</div>
+                  <div className="text-[11px] text-[#707579]">Администраторов</div>
                 </div>
               </div>
-              <div className="bg-[#141428] rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#2a2a4a]/50">
-                <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <Key className="w-4 h-4 text-amber-600" />
+              <div className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#E0E0E0]">
+                <div className="w-9 h-9 rounded-lg bg-[#F9A825]/10 flex items-center justify-center">
+                  <Key className="w-4 h-4 text-[#F9A825]" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-[#e0e0ff]">{users.filter(u => u.connections.length > 0).length}</div>
-                  <div className="text-[11px] text-[#7a7aaa]">С ВК токеном</div>
+                  <div className="text-xl font-bold text-black">{users.filter(u => u.connections.length > 0).length}</div>
+                  <div className="text-[11px] text-[#707579]">С ВК токеном</div>
                 </div>
               </div>
-              <div className="bg-[#141428] rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#2a2a4a]/50">
-                <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                  <Calendar className="w-4 h-4 text-purple-600" />
+              <div className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-[#E0E0E0]">
+                <div className="w-9 h-9 rounded-lg bg-[#8E44AD]/10 flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-[#8E44AD]" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-[#e0e0ff]">
+                  <div className="text-xl font-bold text-black">
                     {users.length > 0 ? new Date(users[0].createdAt).toLocaleDateString('ru') : '—'}
                   </div>
-                  <div className="text-[11px] text-[#7a7aaa]">Последний рег.</div>
+                  <div className="text-[11px] text-[#707579]">Последний рег.</div>
                 </div>
               </div>
             </div>
@@ -354,54 +354,54 @@ export default function AdminPage() {
             {/* Search */}
             <div className="mb-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7a7aaa]" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#707579]" />
                 <Input
                   placeholder="Поиск по email или имени..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="pl-10 h-11 bg-[#1a1a35] border-[#2a2a4a] focus:border-[#00f0ff] focus:ring-[#00f0ff]/20 rounded-xl"
+                  className="pl-10 h-11 bg-white border-[#E0E0E0] focus:border-[#2AABEE] focus:ring-[#2AABEE]/20 rounded-xl text-black placeholder:text-[#9E9E9E]"
                 />
               </div>
             </div>
 
             {/* Users Table / Cards */}
-            <div className="bg-[#141428] rounded-2xl shadow-sm border border-[#2a2a4a]/50 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-[#E0E0E0] overflow-hidden">
               {/* Desktop table */}
               <div className="hidden md:block">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-[#2a2a4a] bg-[#1a1a35]">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#7a7aaa] uppercase tracking-wider">Пользователь</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#7a7aaa] uppercase tracking-wider">Email / Пароль</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#7a7aaa] uppercase tracking-wider">Роль</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#7a7aaa] uppercase tracking-wider">ВК Токен</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#7a7aaa] uppercase tracking-wider">Дата</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-[#7a7aaa] uppercase tracking-wider">Действия</th>
+                    <tr className="border-b border-[#E0E0E0] bg-[#F0F2F5]">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#707579] uppercase tracking-wider">Пользователь</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#707579] uppercase tracking-wider">Email / Пароль</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#707579] uppercase tracking-wider">Роль</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#707579] uppercase tracking-wider">ВК Токен</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#707579] uppercase tracking-wider">Дата</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-[#707579] uppercase tracking-wider">Действия</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.map(u => (
-                      <tr key={u.id} className="border-b border-[#2a2a4a]/50 hover:bg-[#1a1a35] transition-colors">
+                      <tr key={u.id} className="border-b border-[#E0E0E0]/50 hover:bg-[#F0F2F5] transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-[#00f0ff]/20 flex items-center justify-center text-[#00f0ff] font-bold text-sm">
+                            <div className="w-9 h-9 rounded-full bg-[#2AABEE]/10 flex items-center justify-center text-[#2AABEE] font-bold text-sm">
                               {u.name?.charAt(0)?.toUpperCase() || u.email.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <p className="font-medium text-sm text-[#e0e0ff]">{u.name || 'Без имени'}</p>
-                              <p className="text-xs text-[#7a7aaa]">{u.email}</p>
+                              <p className="font-medium text-sm text-black">{u.name || 'Без имени'}</p>
+                              <p className="text-xs text-[#707579]">{u.email}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <Lock className="w-3.5 h-3.5 text-[#7a7aaa]" />
-                            <span className="text-xs text-[#7a7aaa]">••••••</span>
+                            <Lock className="w-3.5 h-3.5 text-[#707579]" />
+                            <span className="text-xs text-[#707579]">••••••</span>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleEdit(u)}
-                              className="h-6 px-2 text-xs text-[#00f0ff] hover:text-[#00c8d6]"
+                              className="h-6 px-2 text-xs text-[#2AABEE] hover:text-[#229ED9]"
                             >
                               Изменить
                             </Button>
@@ -409,12 +409,12 @@ export default function AdminPage() {
                         </td>
                         <td className="px-4 py-3">
                           {u.role === 'admin' ? (
-                            <Badge className="bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/30 font-medium">
+                            <Badge className="bg-[#2AABEE]/10 text-[#2AABEE] border border-[#2AABEE]/30 font-medium">
                               <Shield className="w-3 h-3 mr-1" />
                               Админ
                             </Badge>
                           ) : (
-                            <Badge className="bg-gray-100 text-gray-600 border border-gray-200 font-medium">
+                            <Badge className="bg-[#F0F2F5] text-[#707579] border border-[#E0E0E0] font-medium">
                               Пользователь
                             </Badge>
                           )}
@@ -422,28 +422,28 @@ export default function AdminPage() {
                         <td className="px-4 py-3">
                           {u.connections.length > 0 ? (
                             <div className="flex items-center gap-1.5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                              <span className="text-xs text-[#7a7aaa] font-mono">{u.connections[0].accessToken}</span>
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#4FAE4E]" />
+                              <span className="text-xs text-[#707579] font-mono">{u.connections[0].accessToken}</span>
                             </div>
                           ) : (
-                            <span className="text-xs text-[#7a7aaa]">Нет</span>
+                            <span className="text-xs text-[#707579]">Нет</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-sm text-[#7a7aaa]">
+                        <td className="px-4 py-3 text-sm text-[#707579]">
                           {new Date(u.createdAt).toLocaleDateString('ru', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-1">
                             {u.connections.length > 0 && (
-                              <Button variant="ghost" size="sm" onClick={() => handleViewToken(u)} className="h-8 w-8 p-0 text-[#7a7aaa] hover:text-[#00f0ff]" title="Токен">
+                              <Button variant="ghost" size="sm" onClick={() => handleViewToken(u)} className="h-8 w-8 p-0 text-[#707579] hover:text-[#2AABEE]" title="Токен">
                                 <Eye className="w-4 h-4" />
                               </Button>
                             )}
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(u)} className="h-8 w-8 p-0 text-[#7a7aaa] hover:text-[#00f0ff]" title="Редактировать">
+                            <Button variant="ghost" size="sm" onClick={() => handleEdit(u)} className="h-8 w-8 p-0 text-[#707579] hover:text-[#2AABEE]" title="Редактировать">
                               <Edit2 className="w-4 h-4" />
                             </Button>
                             {u.id !== authUser.id && (
-                              <Button variant="ghost" size="sm" onClick={() => handleDelete(u)} className="h-8 w-8 p-0 text-[#7a7aaa] hover:text-[#ff2d55]" title="Удалить">
+                              <Button variant="ghost" size="sm" onClick={() => handleDelete(u)} className="h-8 w-8 p-0 text-[#707579] hover:text-[#E53935]" title="Удалить">
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             )}
@@ -458,32 +458,32 @@ export default function AdminPage() {
               {/* Mobile cards */}
               <div className="md:hidden">
                 <ScrollArea className="max-h-[calc(100vh-360px)]">
-                  <div className="divide-y divide-[#2a2a4a]/50">
+                  <div className="divide-y divide-[#E0E0E0]/50">
                     {filteredUsers.map(u => (
-                      <div key={u.id} className="p-4 hover:bg-[#1a1a35] transition-colors">
+                      <div key={u.id} className="p-4 hover:bg-[#F0F2F5] transition-colors">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="w-10 h-10 rounded-full bg-[#00f0ff]/20 flex items-center justify-center text-[#00f0ff] font-bold flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-[#2AABEE]/10 flex items-center justify-center text-[#2AABEE] font-bold flex-shrink-0">
                               {u.name?.charAt(0)?.toUpperCase() || u.email.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="font-medium text-sm text-[#e0e0ff] truncate">{u.name || 'Без имени'}</p>
-                                {u.role === 'admin' && <Shield className="w-3.5 h-3.5 text-[#00f0ff] flex-shrink-0" />}
+                                <p className="font-medium text-sm text-black truncate">{u.name || 'Без имени'}</p>
+                                {u.role === 'admin' && <Shield className="w-3.5 h-3.5 text-[#2AABEE] flex-shrink-0" />}
                               </div>
-                              <p className="text-xs text-[#7a7aaa] truncate">{u.email}</p>
+                              <p className="text-xs text-[#707579] truncate">{u.email}</p>
                               <div className="flex items-center gap-3 mt-1">
-                                <span className="flex items-center gap-1 text-xs text-[#7a7aaa]">
+                                <span className="flex items-center gap-1 text-xs text-[#707579]">
                                   <Lock className="w-3 h-3" /> ••••
                                 </span>
                                 {u.connections.length > 0 ? (
-                                  <span className="text-xs text-green-600 flex items-center gap-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />ВК
+                                  <span className="text-xs text-[#4FAE4E] flex items-center gap-1">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#4FAE4E]" />ВК
                                   </span>
                                 ) : (
-                                  <span className="text-xs text-[#7a7aaa]">Без ВК</span>
+                                  <span className="text-xs text-[#707579]">Без ВК</span>
                                 )}
-                                <span className="text-xs text-[#7a7aaa]">
+                                <span className="text-xs text-[#707579]">
                                   {new Date(u.createdAt).toLocaleDateString('ru')}
                                 </span>
                               </div>
@@ -491,15 +491,15 @@ export default function AdminPage() {
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
                             {u.connections.length > 0 && (
-                              <Button variant="ghost" size="sm" onClick={() => handleViewToken(u)} className="h-8 w-8 p-0 text-[#7a7aaa]">
+                              <Button variant="ghost" size="sm" onClick={() => handleViewToken(u)} className="h-8 w-8 p-0 text-[#707579]">
                                 <Eye className="w-4 h-4" />
                               </Button>
                             )}
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(u)} className="h-8 w-8 p-0 text-[#7a7aaa]">
+                            <Button variant="ghost" size="sm" onClick={() => handleEdit(u)} className="h-8 w-8 p-0 text-[#707579]">
                               <Edit2 className="w-4 h-4" />
                             </Button>
                             {u.id !== authUser.id && (
-                              <Button variant="ghost" size="sm" onClick={() => handleDelete(u)} className="h-8 w-8 p-0 text-[#7a7aaa]">
+                              <Button variant="ghost" size="sm" onClick={() => handleDelete(u)} className="h-8 w-8 p-0 text-[#707579]">
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             )}
@@ -512,7 +512,7 @@ export default function AdminPage() {
               </div>
 
               {filteredUsers.length === 0 && (
-                <div className="py-16 text-center text-[#7a7aaa]">
+                <div className="py-16 text-center text-[#707579]">
                   <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p className="text-sm">Пользователи не найдены</p>
                 </div>
@@ -524,33 +524,33 @@ export default function AdminPage() {
           <TabsContent value="settings" className="mt-4">
             <div className="max-w-2xl space-y-6">
               {/* VK OAuth Settings */}
-              <div className="bg-[#141428] rounded-2xl shadow-sm border border-[#2a2a4a]/50 overflow-hidden">
-                <div className="px-6 py-4 border-b border-[#2a2a4a]/50 bg-[#1a1a35]">
-                  <h3 className="flex items-center gap-2 font-semibold text-[#e0e0ff]">
-                    <div className="w-8 h-8 rounded-lg bg-[#00f0ff]/20 flex items-center justify-center">
+              <div className="bg-white rounded-2xl shadow-sm border border-[#E0E0E0] overflow-hidden">
+                <div className="px-6 py-4 border-b border-[#E0E0E0] bg-[#F0F2F5]">
+                  <h3 className="flex items-center gap-2 font-semibold text-black">
+                    <div className="w-8 h-8 rounded-lg bg-[#2AABEE]/10 flex items-center justify-center">
                       <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                        <rect width="20" height="20" rx="4" fill="#00f0ff"/>
+                        <circle cx="10" cy="10" r="10" fill="#2AABEE"/>
                         <path d="M5 7h1.8c.2 0 .4.1.4.3.3.7.9 2 1.4 2.3.2.1.3 0 .3-.2v-1.4c0-.5-.2-.9-.2-.9s-.1-.2-.3-.2c-.1 0-.2-.1-.1-.2.1-.1.3-.3.6-.3h1.4c.3 0 .5.2.5.5v2.1c0 .2.2.4.3.2.4-.3 1-1.4 1.5-2.4.1-.2.2-.3.4-.3h1.5c.3 0 .5.3.3.6-.6 1-1.5 2.5-1.9 2.9-.2.2-.1.4 0 .6.5.5 1.4 1.5 1.8 2 .2.2.1.5-.2.5h-1.8c-.2 0-.3-.1-.5-.2-.4-.4-.9-1-1.3-1-.2 0-.3.1-.3.4v.5c0 .2-.2.4-.4.4h-1c-1.8 0-3.2-2.5-4.1-4.6-.1-.2 0-.4.2-.4z" fill="white"/>
                       </svg>
                     </div>
                     Подключение через ВКонтакте (OAuth)
                   </h3>
-                  <p className="text-sm text-[#7a7aaa] mt-1">
+                  <p className="text-sm text-[#707579] mt-1">
                     Настройте автоматическое получение токена для пользователей
                   </p>
                 </div>
                 <div className="px-6 py-5 space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-[#e0e0ff] font-medium">ID приложения ВКонтакте</Label>
+                    <Label className="text-black font-medium">ID приложения ВКонтакте</Label>
                     <Input
                       value={vkAppId}
                       onChange={e => setVkAppId(e.target.value)}
                       placeholder="Например: 12345678"
-                      className="h-11 bg-[#1a1a35] border-[#2a2a4a] focus:border-[#00f0ff] focus:ring-[#00f0ff]/20 rounded-xl"
+                      className="h-11 bg-[#F0F2F5] border-[#E0E0E0] focus:border-[#2AABEE] focus:ring-[#2AABEE]/20 rounded-xl text-black placeholder:text-[#9E9E9E]"
                     />
-                    <p className="text-xs text-[#7a7aaa]">
+                    <p className="text-xs text-[#707579]">
                       Создайте Standalone-приложение на{' '}
-                      <a href="https://vk.com/editapp?act=create" target="_blank" rel="noopener noreferrer" className="text-[#00f0ff] hover:underline inline-flex items-center gap-0.5">
+                      <a href="https://vk.com/editapp?act=create" target="_blank" rel="noopener noreferrer" className="text-[#2AABEE] hover:underline inline-flex items-center gap-0.5">
                         vk.com/editapp <ExternalLink className="w-3 h-3" />
                       </a>{' '}
                       и укажите его ID здесь
@@ -558,18 +558,18 @@ export default function AdminPage() {
                   </div>
 
                   {oauthEnabled && (
-                    <div className="bg-[#1a1a35] border border-[#00f0ff44] rounded-xl p-4 space-y-3">
+                    <div className="bg-[#EFFDDE] border border-[#4FAE4E]/30 rounded-xl p-4 space-y-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                        <span className="text-sm font-medium text-[#e0e0ff]">OAuth авторизация включена</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#4FAE4E]" />
+                        <span className="text-sm font-medium text-black">OAuth авторизация включена</span>
                       </div>
-                      <p className="text-xs text-[#7a7aaa]">
+                      <p className="text-xs text-[#707579]">
                         Пользователи смогут подключать ВКонтакте в один клик через кнопку &quot;Подключить через ВКонтакте&quot;.
                       </p>
-                      <div className="bg-[#141428]/60 rounded-lg p-3 space-y-1.5">
-                        <p className="text-xs font-semibold text-[#e0e0ff]">В настройках приложения ВК укажите:</p>
+                      <div className="bg-white/60 rounded-lg p-3 space-y-1.5">
+                        <p className="text-xs font-semibold text-black">В настройках приложения ВК укажите:</p>
                         <div className="flex items-center gap-2">
-                          <code className="text-xs bg-[#141428] px-2 py-1 rounded border border-[#2a2a4a] text-[#e0e0ff] flex-1 break-all select-all">
+                          <code className="text-xs bg-white px-2 py-1 rounded border border-[#E0E0E0] text-black flex-1 break-all select-all">
                             {typeof window !== 'undefined' ? `${window.location.origin}/vk-callback` : '/vk-callback'}
                           </code>
                           <Button
@@ -580,12 +580,12 @@ export default function AdminPage() {
                               navigator.clipboard.writeText(url);
                               toast({ title: 'Скопировано', description: 'Redirect URI скопирован' });
                             }}
-                            className="h-7 w-7 p-0 text-[#00f0ff]"
+                            className="h-7 w-7 p-0 text-[#2AABEE]"
                           >
                             <Copy className="w-3.5 h-3.5" />
                           </Button>
                         </div>
-                        <p className="text-[10px] text-[#7a7aaa]">
+                        <p className="text-[10px] text-[#707579]">
                           Раздел: Настройки → Открытые API → Адрес страницы авторизации
                         </p>
                       </div>
@@ -593,8 +593,8 @@ export default function AdminPage() {
                   )}
 
                   {!oauthEnabled && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                      <p className="text-xs text-amber-700">
+                    <div className="bg-[#FFF8E1] border border-[#F9A825]/30 rounded-xl p-4">
+                      <p className="text-xs text-[#F57F17]">
                         <strong>Без ID приложения</strong> пользователям придётся вручную получать и вставлять токен доступа. Укажите ID приложения, чтобы включить авторизацию в один клик.
                       </p>
                     </div>
@@ -603,7 +603,7 @@ export default function AdminPage() {
                   <Button
                     onClick={handleSaveSettings}
                     disabled={settingsSaving}
-                    className="bg-[#00f0ff] hover:bg-[#00c8d6] text-[#0d0d1a] font-semibold neon-glow-cyan rounded-xl h-10"
+                    className="bg-[#2AABEE] hover:bg-[#229ED9] text-white font-semibold rounded-xl h-10"
                   >
                     {settingsSaving ? (
                       <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
@@ -619,46 +619,46 @@ export default function AdminPage() {
               </div>
 
               {/* Instructions card */}
-              <div className="bg-[#141428] rounded-2xl shadow-sm border border-[#2a2a4a]/50 overflow-hidden">
-                <div className="px-6 py-4 border-b border-[#2a2a4a]/50 bg-[#1a1a35]">
-                  <h3 className="font-semibold text-[#e0e0ff] flex items-center gap-2">
-                    <ExternalLink className="w-4 h-4 text-[#00f0ff]" />
+              <div className="bg-white rounded-2xl shadow-sm border border-[#E0E0E0] overflow-hidden">
+                <div className="px-6 py-4 border-b border-[#E0E0E0] bg-[#F0F2F5]">
+                  <h3 className="font-semibold text-black flex items-center gap-2">
+                    <ExternalLink className="w-4 h-4 text-[#2AABEE]" />
                     Инструкция по настройке
                   </h3>
                 </div>
-                <div className="px-6 py-5 space-y-4 text-sm text-[#e0e0ff]">
+                <div className="px-6 py-5 space-y-4 text-sm text-black">
                   <div className="flex gap-3">
-                    <div className="w-7 h-7 rounded-full bg-[#00f0ff] text-[#0d0d1a] flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                    <div className="w-7 h-7 rounded-full bg-[#2AABEE] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
                     <div>
                       <p className="font-medium">Создайте приложение ВКонтакте</p>
-                      <p className="text-xs text-[#7a7aaa] mt-0.5">
-                        Перейдите на <a href="https://vk.com/editapp?act=create" target="_blank" rel="noopener noreferrer" className="text-[#00f0ff] hover:underline">vk.com/editapp</a> и создайте Standalone-приложение
+                      <p className="text-xs text-[#707579] mt-0.5">
+                        Перейдите на <a href="https://vk.com/editapp?act=create" target="_blank" rel="noopener noreferrer" className="text-[#2AABEE] hover:underline">vk.com/editapp</a> и создайте Standalone-приложение
                       </p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="w-7 h-7 rounded-full bg-[#00f0ff] text-[#0d0d1a] flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                    <div className="w-7 h-7 rounded-full bg-[#2AABEE] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
                     <div>
                       <p className="font-medium">Настройте Redirect URI</p>
-                      <p className="text-xs text-[#7a7aaa] mt-0.5">
-                        В настройках приложения укажите адрес: <code className="bg-[#1a1a35] px-1.5 py-0.5 rounded text-[10px]">{'/vk-callback'}</code> вашего сайта
+                      <p className="text-xs text-[#707579] mt-0.5">
+                        В настройках приложения укажите адрес: <code className="bg-[#F0F2F5] px-1.5 py-0.5 rounded text-[10px]">{'/vk-callback'}</code> вашего сайта
                       </p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="w-7 h-7 rounded-full bg-[#00f0ff] text-[#0d0d1a] flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                    <div className="w-7 h-7 rounded-full bg-[#2AABEE] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
                     <div>
                       <p className="font-medium">Скопируйте ID приложения</p>
-                      <p className="text-xs text-[#7a7aaa] mt-0.5">
+                      <p className="text-xs text-[#707579] mt-0.5">
                         Вставьте числовой ID приложения в поле выше и нажмите &quot;Сохранить&quot;
                       </p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">✓</div>
+                    <div className="w-7 h-7 rounded-full bg-[#4FAE4E] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">✓</div>
                     <div>
                       <p className="font-medium">Готово!</p>
-                      <p className="text-xs text-[#7a7aaa] mt-0.5">
+                      <p className="text-xs text-[#707579] mt-0.5">
                         Теперь пользователи смогут подключать ВКонтакте в один клик
                       </p>
                     </div>
@@ -672,38 +672,37 @@ export default function AdminPage() {
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-[#141428]">
+        <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#e0e0ff]">
-              <Edit2 className="w-5 h-5 text-[#00f0ff]" />
+            <DialogTitle className="flex items-center gap-2 text-black">
+              <Edit2 className="w-5 h-5 text-[#2AABEE]" />
               Редактирование пользователя
             </DialogTitle>
-            <DialogDescription className="text-[#7a7aaa]">
+            <DialogDescription className="text-[#707579]">
               Измените данные пользователя
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {/* Current user info */}
             {selectedUser && (
-              <div className="flex items-center gap-3 p-3 bg-[#1a1a35] rounded-xl border border-[#2a2a4a]/50">
-                <div className="w-10 h-10 rounded-full bg-[#00f0ff]/20 flex items-center justify-center text-[#00f0ff] font-bold">
+              <div className="flex items-center gap-3 p-3 bg-[#F0F2F5] rounded-xl border border-[#E0E0E0]/50">
+                <div className="w-10 h-10 rounded-full bg-[#2AABEE]/10 flex items-center justify-center text-[#2AABEE] font-bold">
                   {selectedUser.name?.charAt(0)?.toUpperCase() || selectedUser.email.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[#e0e0ff] truncate">{selectedUser.email}</p>
+                  <p className="text-sm font-medium text-black truncate">{selectedUser.email}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {selectedUser.role === 'admin' ? (
-                      <Badge className="bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/30 text-[10px] py-0">
+                      <Badge className="bg-[#2AABEE]/10 text-[#2AABEE] border border-[#2AABEE]/30 text-[10px] py-0">
                         <Shield className="w-2.5 h-2.5 mr-0.5" />Админ
                       </Badge>
                     ) : (
-                      <Badge className="bg-gray-100 text-gray-600 border border-gray-200 text-[10px] py-0">
+                      <Badge className="bg-[#F0F2F5] text-[#707579] border border-[#E0E0E0] text-[10px] py-0">
                         Пользователь
                       </Badge>
                     )}
                     {selectedUser.connections.length > 0 && (
-                      <span className="text-[10px] text-green-600 flex items-center gap-0.5">
-                        <div className="w-1 h-1 rounded-full bg-green-500" />ВК подключён
+                      <span className="text-[10px] text-[#4FAE4E] flex items-center gap-0.5">
+                        <div className="w-1 h-1 rounded-full bg-[#4FAE4E]" />ВК подключён
                       </span>
                     )}
                   </div>
@@ -712,27 +711,27 @@ export default function AdminPage() {
             )}
 
             <div className="space-y-2">
-              <Label className="text-[#e0e0ff]">Имя</Label>
+              <Label className="text-black">Имя</Label>
               <Input
                 value={editName}
                 onChange={e => setEditName(e.target.value)}
                 placeholder="Имя пользователя"
-                className="bg-[#1a1a35] border-[#2a2a4a] focus:border-[#00f0ff] rounded-xl"
+                className="bg-[#F0F2F5] border-[#E0E0E0] focus:border-[#2AABEE] rounded-xl text-black placeholder:text-[#9E9E9E]"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-[#e0e0ff]">Email</Label>
+              <Label className="text-black">Email</Label>
               <Input
                 type="email"
                 value={editEmail}
                 onChange={e => setEditEmail(e.target.value)}
-                className="bg-[#1a1a35] border-[#2a2a4a] focus:border-[#00f0ff] rounded-xl"
+                className="bg-[#F0F2F5] border-[#E0E0E0] focus:border-[#2AABEE] rounded-xl text-black placeholder:text-[#9E9E9E]"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-[#e0e0ff]">Роль</Label>
+              <Label className="text-black">Роль</Label>
               <Select value={editRole} onValueChange={setEditRole}>
-                <SelectTrigger className="bg-[#1a1a35] border-[#2a2a4a] rounded-xl">
+                <SelectTrigger className="bg-[#F0F2F5] border-[#E0E0E0] rounded-xl text-black">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -742,7 +741,7 @@ export default function AdminPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-[#e0e0ff] flex items-center gap-2">
+              <Label className="text-black flex items-center gap-2">
                 <Lock className="w-3.5 h-3.5" />
                 Новый пароль
               </Label>
@@ -752,24 +751,24 @@ export default function AdminPage() {
                   value={editPassword}
                   onChange={e => setEditPassword(e.target.value)}
                   placeholder="Оставьте пустым, чтобы не менять"
-                  className="bg-[#1a1a35] border-[#2a2a4a] focus:border-[#00f0ff] rounded-xl pr-10"
+                  className="bg-[#F0F2F5] border-[#E0E0E0] focus:border-[#2AABEE] rounded-xl pr-10 text-black placeholder:text-[#9E9E9E]"
                 />
                 <button
                   type="button"
                   onClick={() => setEditPasswordVisible(!editPasswordVisible)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7a7aaa] hover:text-[#e0e0ff]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#707579] hover:text-black"
                 >
                   {editPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="text-xs text-[#7a7aaa]">Минимум 6 символов. Текущий пароль неизвестен — только хранится хеш.</p>
+              <p className="text-xs text-[#707579]">Минимум 6 символов. Текущий пароль неизвестен — только хранится хеш.</p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="rounded-xl border-[#00f0ff33] text-[#00f0ff] hover:bg-[#00f0ff]/10">
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="rounded-xl border-[#E0E0E0] text-[#707579] hover:bg-[#F0F2F5]">
               Отмена
             </Button>
-            <Button onClick={handleSaveEdit} className="bg-[#00f0ff] hover:bg-[#00c8d6] text-[#0d0d1a] neon-glow-cyan rounded-xl">
+            <Button onClick={handleSaveEdit} className="bg-[#2AABEE] hover:bg-[#229ED9] text-white rounded-xl">
               Сохранить
             </Button>
           </DialogFooter>
@@ -778,22 +777,22 @@ export default function AdminPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-sm bg-[#141428]">
+        <DialogContent className="sm:max-w-sm bg-white">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#ff2d55]">
+            <DialogTitle className="flex items-center gap-2 text-[#E53935]">
               <Trash2 className="w-5 h-5" />
               Удаление пользователя
             </DialogTitle>
-            <DialogDescription className="text-[#7a7aaa]">
+            <DialogDescription className="text-[#707579]">
               Вы уверены, что хотите удалить пользователя <strong>{selectedUser?.email}</strong>?
               Все связанные данные (ВК подключения, чаты, задачи, логи) будут удалены безвозвратно.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="rounded-xl border-[#00f0ff33] text-[#00f0ff] hover:bg-[#00f0ff]/10">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="rounded-xl border-[#E0E0E0] text-[#707579] hover:bg-[#F0F2F5]">
               Отмена
             </Button>
-            <Button onClick={confirmDelete} className="bg-[#ff2d55] hover:bg-[#ff2d55]/80 text-white rounded-xl">
+            <Button onClick={confirmDelete} className="bg-[#E53935] hover:bg-[#C62828] text-white rounded-xl">
               Удалить
             </Button>
           </DialogFooter>
@@ -802,75 +801,64 @@ export default function AdminPage() {
 
       {/* Token View Dialog */}
       <Dialog open={tokenDialogOpen} onOpenChange={setTokenDialogOpen}>
-        <DialogContent className="sm:max-w-lg bg-[#141428]">
+        <DialogContent className="sm:max-w-lg bg-white">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#e0e0ff]">
-              <Key className="w-5 h-5 text-[#00f0ff]" />
+            <DialogTitle className="flex items-center gap-2 text-black">
+              <Key className="w-5 h-5 text-[#2AABEE]" />
               VK Token — {selectedUser?.email}
             </DialogTitle>
-            <DialogDescription className="text-[#7a7aaa]">
+            <DialogDescription className="text-[#707579]">
               Токен доступа ВКонтакте пользователя
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             {fullToken ? (
               <div className="space-y-3">
-                <div className="bg-[#1a1a35] border border-[#2a2a4a] rounded-xl p-3">
+                <div className="bg-[#F0F2F5] border border-[#E0E0E0] rounded-xl p-3">
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <Label className="text-xs text-[#7a7aaa]">Токен доступа</Label>
+                    <Label className="text-xs text-[#707579]">Токен доступа</Label>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setTokenVisible(!tokenVisible)}
-                      className="h-7 px-2 text-xs text-[#00f0ff]"
+                      className="h-7 px-2 text-xs text-[#2AABEE]"
                     >
                       {tokenVisible ? <EyeOff className="w-3.5 h-3.5 mr-1" /> : <Eye className="w-3.5 h-3.5 mr-1" />}
                       {tokenVisible ? 'Скрыть' : 'Показать'}
                     </Button>
                   </div>
-                  <p className="text-xs font-mono break-all text-[#e0e0ff] select-all">
-                    {tokenVisible ? fullToken : fullToken.slice(0, 15) + '••••••••••••' + fullToken.slice(-8)}
+                  <p className="text-xs font-mono break-all text-black select-all">
+                    {tokenVisible ? fullToken : fullToken.slice(0, 15) + '•••••••••••'}
                   </p>
                 </div>
-                {selectedUser?.connections?.[0] && (
-                  <div className="flex items-center gap-4 text-xs text-[#7a7aaa]">
-                    <span className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      {selectedUser.connections[0].userName || 'Без имени'}
-                    </span>
-                    {selectedUser.connections[0].userId && (
-                      <span>ID: {selectedUser.connections[0].userId}</span>
-                    )}
-                  </div>
-                )}
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                  <p className="text-xs text-amber-700">
-                    <strong>Внимание:</strong> Не передавайте токен третьим лицам. Он предоставляет полный доступ к аккаунту ВКонтакте.
-                  </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(fullToken);
+                      toast({ title: 'Скопировано', description: 'Токен скопирован в буфер обмена' });
+                    }}
+                    className="flex-1 border-[#2AABEE]/30 text-[#2AABEE] hover:bg-[#2AABEE]/8 rounded-xl"
+                  >
+                    <Copy className="w-3.5 h-3.5 mr-1.5" />
+                    Скопировать токен
+                  </Button>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-[#7a7aaa]">
-                <Key className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">Токен не найден</p>
+              <div className="flex items-center justify-center py-8">
+                <svg className="animate-spin h-6 w-6 text-[#2AABEE]" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTokenDialogOpen(false)} className="rounded-xl border-[#00f0ff33] text-[#00f0ff] hover:bg-[#00f0ff]/10">
+            <Button variant="outline" onClick={() => setTokenDialogOpen(false)} className="rounded-xl border-[#E0E0E0] text-[#707579] hover:bg-[#F0F2F5]">
               Закрыть
             </Button>
-            {fullToken && (
-              <Button
-                onClick={() => {
-                  navigator.clipboard.writeText(fullToken);
-                  toast({ title: 'Скопировано', description: 'Токен скопирован в буфер обмена' });
-                }}
-                className="bg-[#00f0ff] hover:bg-[#00c8d6] text-[#0d0d1a] neon-glow-cyan rounded-xl"
-              >
-                Копировать
-              </Button>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
