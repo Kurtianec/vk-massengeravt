@@ -1,5 +1,21 @@
 import {NextResponse} from 'next/server';
 import {authorized,redis,tg} from '../../../lib/core';
 export const runtime='nodejs';export const dynamic='force-dynamic';export const maxDuration=60;
-export async function GET(req){if(!authorized(req))return NextResponse.json({error:'Unauthorized'},{status:401});try{let stats=[],all=[];for(let b=0;b<6;b++){const raw=await redis(['GET',`vortex:last:${b}`]);if(raw)stats.push(JSON.parse(raw));const stored=await redis(['GET',`vortex:batch:${b}`]);if(stored)all.push(...(JSON.parse(stored).signals||[]))}const sum=(k)=>stats.reduce((a,x)=>a+(x[k]||0),0);const tp=all.filter(x=>x.status==='TP').length,sl=all.filter(x=>x.status==='SL').length,open=all.filter(x=>x.status==='OPEN').length,amb=all.filter(x=>x.status==='AMBIGUOUS').length,timed=all.filter(x=>x.status==='TIMEOUT').length;const lng=all.filter(x=>x.side==='LONG'),shr=all.filter(x=>x.side==='SHORT');const win=(arr)=>{let a=arr.filter(x=>x.status==='TP').length,b=arr.filter(x=>x.status==='SL').length;return a+b?(100*a/(a+b)).toFixed(1)+'%':'нет данных'};const stale=stats.filter(x=>Date.now()-x.updated>65*60000).length;const msg=`🌪 VORTEX AI | Отчёт\nПоследние сканирования: ${stats.length}/6 партий\nПроверено: ${sum('checked')} монет\nСигналов за последние запуски: ${sum('sent')}\nОшибок запросов: ${sum('errors')}\nУстаревшие партии (>65 мин): ${stale}\n\n📊 Статистика за 30 дней\nВсего сигналов: ${all.length}\nTP: ${tp} | SL: ${sl}\nОткрыто: ${open} | Тайм-аут: ${timed}\nНеоднозначные: ${amb}\nТочность TP/(TP+SL): ${tp+sl?(100*tp/(tp+sl)).toFixed(1)+'%':'нет данных'}\nLONG: ${win(lng)} | SHORT: ${win(shr)}\n⚠️ Без комиссий; тайм-ауты исключены из TP/SL%`;
-await tg(msg);return NextResponse.json({ok:true,stats:stats.length,signals:all.length});}catch(e){return NextResponse.json({ok:false,error:String(e.message||e)},{status:502})}}
+export async function GET(req){
+ if(!authorized(req))return NextResponse.json({error:'Unauthorized'},{status:401});
+ try{
+  const batches=[];for(let i=0;i<6;i++){const r=await redis(['GET',`vortex:last:${i}`]);if(r){try{batches.push(JSON.parse(r))}catch{}}}
+  const entries=await redis(['HVALS','vortex:v5:signals']);
+  const all=(entries||[]).map(x=>{try{return JSON.parse(x)}catch{return null}}).filter(Boolean).filter(x=>x.detected>Date.now()-30*86400000);
+  // Active records are updated by the scanner; use outcome ledger to override initial OPEN state.
+  const closedEntries=await redis(['HVALS','vortex:v5:outcomes']);
+  const closed=new Map((closedEntries||[]).map(x=>{try{const s=JSON.parse(x);return [s.id,s]}catch{return [null,null]}}));
+  const signals=all.map(s=>closed.get(s.id)||s);
+  const count=status=>signals.filter(s=>s.status===status).length;
+  const tp=count('TP'),sl=count('SL');
+  const accuracy=tp+sl?`${(100*tp/(tp+sl)).toFixed(1)}%`:'нет данных';
+  const sum=k=>batches.reduce((a,x)=>a+(Number(x[k])||0),0);
+  const msg=`🌪 VORTEX AI 5.0 | Отчёт\nПартии: ${batches.length}/6\nПроверено: ${sum('checked')} | Ошибок: ${sum('errors')}\nОтправлено: ${sum('sent')}\n\n📊 За 30 дней\nСигналов: ${signals.length}\nTP: ${tp} | SL: ${sl}\nОткрыто: ${count('OPEN')} | Тайм-аут: ${count('TIMEOUT')}\nНеоднозначные: ${count('AMBIGUOUS')} | Непроверенные: ${count('UNVERIFIED')}\nTP/(TP+SL): ${accuracy}\n⚠️ Без комиссий, неоднозначные и тайм-ауты исключены из точности.`;
+  await tg(msg);return NextResponse.json({ok:true,batches:batches.length,signals:signals.length});
+ }catch(e){return NextResponse.json({ok:false,error:String(e.message)},{status:502})}
+}
