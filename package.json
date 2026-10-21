@@ -1,1 +1,22 @@
-{"name":"vortex-ai-cloud","version":"5.0.0","private":true,"scripts":{"dev":"next dev","build":"next build","start":"next start","test":"node --experimental-default-type=module --test tests/*.test.mjs"},"dependencies":{"next":"^15.5.0","react":"^19.0.0","react-dom":"^19.0.0"}}
+
+{
+  "name": "vortex-ai-cloud",
+  "version": "5.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --experimental-default-type=module --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "typescript": "5.8.2",
+    "@types/react": "^19.0.0",
+    "@types/node": "^20.17.6"
+  }
+}
