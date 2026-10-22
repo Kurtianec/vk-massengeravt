@@ -7,7 +7,6 @@ import {settleMinute} from '../../../lib/outcomes';
 import {hourTrendAllows} from '../../../lib/strict';
 export const runtime='nodejs';export const dynamic='force-dynamic';export const maxDuration=300;
 const INTERVAL=900000;
-const threshold=Math.max(84,Math.min(100,Number(process.env.SIGNAL_THRESHOLD||86)));
 const recentKey=(symbol)=>`vortex:v7:active:${symbol}`;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const verdict=(reason,candidate=0,sent=0)=>({checked:1,candidate,sent,reason});
@@ -36,8 +35,8 @@ async function scanOne(item){
  const funding=Number(item.fundingRate);
  const f=Number.isFinite(funding)?funding:null;
  // Settlement is handled by the independent /api/settle job.
- const {signal:setup}=createSignal(symbol,candles,oiChange,f,threshold);
- if(!setup)return verdict('NO_SETUP');
+ const {signal:setup,reason}=createSignal(symbol,candles,oiChange,f);
+ if(!setup)return verdict(reason||'NO_SETUP');
  const hourly=await bybit('/v5/market/kline',{category:'linear',symbol,interval:'60',limit:230});
  if(!hourTrendAllows(setup,hourly.list))return verdict('HOUR_TREND',1);
  // Expensive microstructure requests only for a qualified setup.
