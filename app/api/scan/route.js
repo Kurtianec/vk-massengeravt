@@ -3,7 +3,7 @@ import {authorized,bybit,redis,tg} from '../../../lib/core';
 import {candlesFromRows,createSignal,formatSignal,settleClosed,oiChangeFromRows,VERSION} from '../../../lib/advanced';
 export const runtime='nodejs';export const dynamic='force-dynamic';export const maxDuration=300;
 const INTERVAL=900000;
-const threshold=Math.max(0,Math.min(100,Number(process.env.SIGNAL_THRESHOLD||70)));
+const threshold=Math.max(0,Math.min(100,Number(process.env.SIGNAL_THRESHOLD||80)));
 const recentKey=(symbol)=>`vortex:v5:active:${symbol}`;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const releaseLease=(key,token)=>redis(['EVAL',"if redis.call('GET',KEYS[1]) == ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end",1,key,token]);
