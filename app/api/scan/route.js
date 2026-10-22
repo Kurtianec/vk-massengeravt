@@ -10,6 +10,7 @@ const INTERVAL=900000;
 const threshold=Math.max(84,Math.min(100,Number(process.env.SIGNAL_THRESHOLD||86)));
 const recentKey=(symbol)=>`vortex:v7:active:${symbol}`;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const verdict=(reason,candidate=0,sent=0)=>({checked:1,candidate,sent,reason});
 const releaseLease=(key,token)=>redis(['EVAL',"if redis.call('GET',KEYS[1]) == ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end",1,key,token]);
 async function recordResult(signal){
  const raw=await redis(['GET',recentKey(signal.symbol)]);
@@ -36,34 +37,34 @@ async function scanOne(item){
  const f=Number.isFinite(funding)?funding:null;
  // Settlement is handled by the independent /api/settle job.
  const {signal:setup}=createSignal(symbol,candles,oiChange,f,threshold);
- if(!setup)return {checked:1,candidate:0,sent:0};
+ if(!setup)return verdict('NO_SETUP');
  const hourly=await bybit('/v5/market/kline',{category:'linear',symbol,interval:'60',limit:230});
- if(!hourTrendAllows(setup,hourly.list))return {checked:1,candidate:1,sent:0};
+ if(!hourTrendAllows(setup,hourly.list))return verdict('HOUR_TREND',1);
  // Expensive microstructure requests only for a qualified setup.
  const [minute,depth]=await Promise.all([
   bybit('/v5/market/kline',{category:'linear',symbol,interval:'1',limit:30}),
   bybit('/v5/market/orderbook',{category:'linear',symbol,limit:25})
  ]);
  const confirmation=confirmEntry(setup,minute.list,depth,item);
- if(!confirmation.allow)return {checked:1,candidate:1,sent:0};
+ if(!confirmation.allow)return verdict(confirmation.reason||'MINUTE_CONFIRMATION',1);
  const signal=confirmation.signal;
  signal.expiresAt=signal.confirmedAt+12*3600000;
  // News does not create trades; it can veto contradictory or already extended moves.
  const eventRaw=await redis(['GET',`vortex:v7:event:latest:${symbol}`]);
  if(eventRaw){let context;try{context=JSON.parse(eventRaw)}catch{}
   const decision=eventDecision(signal,context);
-  if(!decision.allow)return {checked:1,candidate:1,sent:0};
+  if(!decision.allow)return verdict('NEWS_VETO',1);
   if(context?.impact?.status==='CONFIRMED_REACTION')signal.eventContext={type:context.event.type,status:context.impact.status,direction:context.impact.direction};
  }
  // One active position per symbol; avoid mutually contradictory alerts.
  const activeRaw=await redis(['GET',recentKey(symbol)]);
- if(activeRaw){try{const active=JSON.parse(activeRaw);if(active.status==='OPEN'&&Date.now()<(active.expiresAt||0))return {checked:1,candidate:1,sent:0};}catch{}}
+ if(activeRaw){try{const active=JSON.parse(activeRaw);if(active.status==='OPEN'&&Date.now()<(active.expiresAt||0))return verdict('ACTIVE_SIGNAL',1);}catch{}}
  const id=`${symbol}:${signal.side}:${signal.strategy}:${signal.bar}`;
  signal.id=id;
  const key=`vortex:v7:notification:${id}`;
  // An atomic claim prevents duplicates across overlapping cron requests.
  const claim=await redis(['SET',key,'SENDING','EX',600,'NX']);
- if(claim!=='OK')return {checked:1,candidate:1,sent:0};
+ if(claim!=='OK')return verdict('DUPLICATE',1);
  try{
   // Persist the candidate before contacting a non-idempotent external API.
   await redis(['HSET','vortex:v7:signals',id,JSON.stringify({...signal,delivery:'PENDING'})]);
@@ -72,7 +73,7 @@ async function scanOne(item){
   await redis(['SET',key,'SENT','EX',35*86400]);
   await redis(['SET',recentKey(symbol),JSON.stringify(signal),'EX',35*86400]);
   await redis(['HSET','vortex:v7:signals',id,JSON.stringify({...signal,delivery:'SENT'})]);
-  return {checked:1,candidate:1,sent:1};
+  return verdict('SENT',1,1);
  }catch(e){
   // Releasing the short-lived claim enables retries. Telegram's non-idempotent API
   // means a network failure after successful delivery can still cause a duplicate.
@@ -94,16 +95,17 @@ export async function GET(req){
   const all=(tickers.list||[]).filter(x=>x.symbol?.endsWith('USDT')&&Number(x.turnover24h)>1000000)
    .sort((a,b)=>Number(b.turnover24h)-Number(a.turnover24h)).slice(0,150);
   const items=all.slice(batch*25,batch*25+25);
-  const result={version:VERSION,batch,selected:items.length,checked:0,candidates:0,sent:0,errors:[],updated:Date.now()};
+  const result={version:VERSION,batch,selected:items.length,checked:0,candidates:0,sent:0,errors:[],reasons:{},startedAt:Date.now(),updated:Date.now()};
   let cursor=0;
   async function worker(){while(cursor<items.length){const item=items[cursor++];try{
-   const r=await scanOne(item);result.checked+=r.checked;result.candidates+=r.candidate;result.sent+=r.sent;
-  }catch(e){result.errors.push(`${item.symbol}: ${String(e.message).slice(0,180)}`)}
+   const r=await scanOne(item);result.checked+=r.checked;result.candidates+=r.candidate;result.sent+=r.sent;result.reasons[r.reason]=(result.reasons[r.reason]||0)+1;
+  }catch(e){result.errors.push(`${item.symbol}: ${String(e.message).slice(0,180)}`);result.reasons.ERROR=(result.reasons.ERROR||0)+1}
   // Spread requests to reduce burst rate limiting.
   await sleep(90);
   }}
   await Promise.all(Array.from({length:3},()=>worker()));
-  await redis(['SET',`vortex:last:${batch}`,JSON.stringify({batch,updated:result.updated,checked:result.checked,sent:result.sent,candidates:result.candidates,errors:result.errors.length,errorSamples:result.errors.slice(0,5)}),'EX',7*86400]);
+  result.finishedAt=Date.now();
+  await redis(['SET',`vortex:last:${batch}`,JSON.stringify({batch,startedAt:result.startedAt,finishedAt:result.finishedAt,updated:result.finishedAt,checked:result.checked,sent:result.sent,candidates:result.candidates,reasons:result.reasons,errors:result.errors.length,errorSamples:result.errors.slice(0,5)}),'EX',7*86400]);
   return NextResponse.json({...result,ok:result.checked>0,errors:result.errors.slice(0,10)},{status:result.checked>0?200:502});
  }catch(e){return NextResponse.json({ok:false,error:String(e.message)},{status:502})}
  finally{if(leaseOwned)await releaseLease(lease,leaseToken).catch(()=>{});}
