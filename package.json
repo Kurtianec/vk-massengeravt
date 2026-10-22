@@ -1,12 +1,13 @@
 {
   "name": "vortex-ai-cloud",
-  "version": "5.2.0",
+  "version": "7.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-default-type=module --test tests/*.test.mjs"
+    "test": "node --experimental-default-type=module --test tests/*.test.mjs",
+    "backtest": "node scripts/backtest.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
