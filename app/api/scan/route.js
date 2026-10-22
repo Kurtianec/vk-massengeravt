@@ -4,9 +4,10 @@ import {candlesFromRows,createSignal,formatSignal,settleClosed,oiChangeFromRows,
 import {eventDecision} from '../../../lib/event-impact';
 import {confirmEntry} from '../../../lib/decision';
 import {settleMinute} from '../../../lib/outcomes';
+import {hourTrendAllows} from '../../../lib/strict';
 export const runtime='nodejs';export const dynamic='force-dynamic';export const maxDuration=300;
 const INTERVAL=900000;
-const threshold=Math.max(0,Math.min(100,Number(process.env.SIGNAL_THRESHOLD||80)));
+const threshold=Math.max(84,Math.min(100,Number(process.env.SIGNAL_THRESHOLD||86)));
 const recentKey=(symbol)=>`vortex:v7:active:${symbol}`;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const releaseLease=(key,token)=>redis(['EVAL',"if redis.call('GET',KEYS[1]) == ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end",1,key,token]);
@@ -33,9 +34,11 @@ async function scanOne(item){
  const oiChange=oiChangeFromRows(oi.list);
  const funding=Number(item.fundingRate);
  const f=Number.isFinite(funding)?funding:null;
- await recordResult({symbol});
+ // Settlement is handled by the independent /api/settle job.
  const {signal:setup}=createSignal(symbol,candles,oiChange,f,threshold);
  if(!setup)return {checked:1,candidate:0,sent:0};
+ const hourly=await bybit('/v5/market/kline',{category:'linear',symbol,interval:'60',limit:230});
+ if(!hourTrendAllows(setup,hourly.list))return {checked:1,candidate:1,sent:0};
  // Expensive microstructure requests only for a qualified setup.
  const [minute,depth]=await Promise.all([
   bybit('/v5/market/kline',{category:'linear',symbol,interval:'1',limit:30}),
@@ -65,6 +68,7 @@ async function scanOne(item){
   // Persist the candidate before contacting a non-idempotent external API.
   await redis(['HSET','vortex:v7:signals',id,JSON.stringify({...signal,delivery:'PENDING'})]);
   await tg(formatSignal(signal));
+  signal.deliveredAt=Date.now();
   await redis(['SET',key,'SENT','EX',35*86400]);
   await redis(['SET',recentKey(symbol),JSON.stringify(signal),'EX',35*86400]);
   await redis(['HSET','vortex:v7:signals',id,JSON.stringify({...signal,delivery:'SENT'})]);
