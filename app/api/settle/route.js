@@ -14,7 +14,8 @@ export async function GET(req){
   const open=(entries||[]).map(v=>{try{return JSON.parse(v)}catch{return null}})
    .filter(s=>s&&s.id&&s.delivery==='SENT'&&s.status==='OPEN'&&!done.has(s.id))
    .sort((a,b)=>String(a.id).localeCompare(String(b.id)));
-  const selected=open.filter((_,i)=>i%6===batch);
+  const stableBatch=id=>[...String(id)].reduce((h,ch)=>(Math.imul(h,31)+ch.charCodeAt(0))>>>0,0)%6;
+  const selected=open.filter(s=>stableBatch(s.id)===batch);
   let checked=0,closed=0;const errors=[];
   for(const s of selected){
    try{
