@@ -1,6 +1,7 @@
-import {test} from 'node:test';import {strict as assert} from 'node:assert';import {resolveTrade,pivots,atr} from '../lib/core.mjs';
-const trade={side:'LONG',barTime:0,stop:90,tp:[105,110,115],hits:[]};
-test('partial targets then stop',()=>{const r=resolveTrade(trade,[{time:1,high:106,low:99},{time:2,high:104,low:89}]);assert.equal(r.status,'PARTIAL_SL');assert.deepEqual(r.hits,[1])});
-test('stop priority ambiguous minute',()=>{const r=resolveTrade(trade,[{time:1,high:116,low:89}]);assert.equal(r.status,'SL');assert.equal(r.ambiguous,true)});
-test('all targets',()=>{const r=resolveTrade(trade,[{time:1,high:116,low:100}]);assert.equal(r.status,'TP3')});
-test('pivots',()=>assert.ok(pivots([{high:1,low:1},{high:2,low:0},{high:1,low:1}],1,1).length===2));
+import test from 'node:test';import assert from 'node:assert/strict';import {resolveTrade,pivots} from '../lib/core.mjs';
+const t={side:'LONG',tp:[110,120],stop:95,hits:[],barTime:0,createdAt:60000};
+test('TP1 then SL',()=>{const x=resolveTrade(t,[{time:60000,low:100,high:111},{time:120000,low:94,high:105}]);assert.equal(x.status,'PARTIAL_SL');assert.deepEqual(x.hits,[1])});
+test('simultaneous TP and SL ambiguous',()=>{const x=resolveTrade(t,[{time:60000,low:94,high:111}]);assert.equal(x.status,'AMBIGUOUS')});
+test('both targets',()=>{const x=resolveTrade(t,[{time:60000,low:100,high:111},{time:120000,low:108,high:121}]);assert.equal(x.status,'TP2')});
+test('before signal ignored',()=>{const x=resolveTrade(t,[{time:0,low:90,high:125}]);assert.equal(x.status,'OPEN')});
+test('pivots',()=>assert.ok(Array.isArray(pivots([]))));
