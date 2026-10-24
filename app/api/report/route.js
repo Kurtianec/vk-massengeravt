@@ -1,2 +1,3 @@
-import {authorized,store,telegram} from '../../../lib/services.mjs';
-export async function GET(req){try{if(!authorized(req))return Response.json({error:'Unauthorized'},{status:401});const all=(await store.list()).filter(Boolean),counts={};for(const t of all)counts[t.status]=(counts[t.status]||0)+1;const text=`📈 <b>ZONE SIGNAL — отчёт</b>\nВсего сигналов: ${all.length}\n🟢 TP2: ${counts.TP2||0}\n🟡 Частичные TP: ${counts.PARTIAL||0}\n🔴 SL: ${counts.SL||0}\n🔴 Частичный TP → SL: ${counts.PARTIAL_SL||0}\n⚠️ Неоднозначные: ${counts.AMBIGUOUS||0}\n⏳ Открыто: ${counts.OPEN||0}\n⚠️ Частичные TP не означают прибыльность; комиссии не учтены.`;await telegram(text);return Response.json({counts,total:all.length})}catch(e){return Response.json({error:e.message},{status:500})}}
+import {authorize,report} from '../../../lib/bot.mjs';
+export const runtime='nodejs';export const maxDuration=60;
+export async function GET(req){if(!authorize(req))return Response.json({error:'Unauthorized'},{status:401});try{return Response.json(await report())}catch(e){console.error(e);return Response.json({error:e.message},{status:500})}}
