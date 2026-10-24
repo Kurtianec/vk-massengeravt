@@ -1,1 +1,1 @@
-export default function Home(){return <main style={{fontFamily:'sans-serif',maxWidth:680,margin:'5rem auto'}}><h1>ZONE SIGNAL</h1><p>Bybit Price Action scanner. Запуск через защищённые cron endpoints.</p></main>}
+export default function Home(){return <main style={{fontFamily:'Arial',margin:'4rem auto',maxWidth:600}}><h1>🚀 Crypto {'{Kurt}'} Ai</h1><p>RSI + Open Interest + Volume · Bybit · Telegram</p><p>API endpoints require authorization.</p></main>}
