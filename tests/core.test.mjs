@@ -1,7 +1,5 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {resolveTrade,pivots} from '../lib/core.mjs';
-const t={side:'LONG',tp:[110,120],stop:95,hits:[],barTime:0,createdAt:60000};
-test('TP1 then SL',()=>{const x=resolveTrade(t,[{time:60000,low:100,high:111},{time:120000,low:94,high:105}]);assert.equal(x.status,'PARTIAL_SL');assert.deepEqual(x.hits,[1])});
-test('simultaneous TP and SL ambiguous',()=>{const x=resolveTrade(t,[{time:60000,low:94,high:111}]);assert.equal(x.status,'AMBIGUOUS')});
-test('both targets',()=>{const x=resolveTrade(t,[{time:60000,low:100,high:111},{time:120000,low:108,high:121}]);assert.equal(x.status,'TP2')});
-test('before signal ignored',()=>{const x=resolveTrade(t,[{time:0,low:90,high:125}]);assert.equal(x.status,'OPEN')});
-test('pivots',()=>assert.ok(Array.isArray(pivots([]))));
+import test from 'node:test';import assert from 'node:assert/strict';import {rsi,settleCandle,evaluate} from '../lib/core.mjs';
+test('RSI enough data',()=>assert.equal(rsi([1,2,3]),null));
+test('both TP and SL in candle ambiguous',()=>{const t={side:'LONG',tp1:105,tp2:110,sl:95,hit1:false};assert.equal(settleCandle(t,{t:1,h:106,l:94}).status,'AMBIGUOUS')});
+test('TP1 then stop is tracked',()=>{let t={side:'LONG',tp1:105,tp2:110,sl:95,hit1:false,status:'OPEN'};t=settleCandle(t,{t:1,h:106,l:99});assert.equal(t.status,'TP1_OPEN');t=settleCandle(t,{t:2,h:103,l:94});assert.equal(t.status,'TP1_SL')});
+test('no signal on missing inputs',()=>assert.equal(evaluate({symbol:'BTCUSDT',candles:[],oiChange:1,volumeRatio:2}),null));
