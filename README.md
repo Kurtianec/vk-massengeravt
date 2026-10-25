@@ -47,3 +47,12 @@
 - Сканирование НЕ гарантирует обнаружение каждой крупной сделки: опрос recent-trade ограничен последними 1000 исполнениями по символу. Для непрерывного полного покрытия необходим отдельный WebSocket-коллектор.
 - `MIN_TURNOVER_USDT=3000000` остаётся фильтром ликвидности. Монеты ниже порога исключены из наблюдения.
 - Cron-расписание и URL не меняются. Добавь `HOT_COINS=30` и сделай Redeploy. Можно сохранить существующий Redis и переменные.
+
+
+## v1.3 fixes
+- Discovery rotates once per minute (all six batches use the same one-minute window).
+- Redis NX guards avoid duplicate per-batch invocations and duplicate stage/whale notifications during overlapping executions.
+- Previous stages expire after 15 minutes of closed-candle time without renewed detection.
+- DEP0169 warning may come from Vercel runtime/dependencies; not suppressed.
+- Public recent-trade endpoint is a rolling sample: whale detection can miss executions. For lossless monitoring use a persistent WebSocket worker.
+- Check `checked` and `errors` in cron response: HTTP 200 alone is not proof of successful scan.
