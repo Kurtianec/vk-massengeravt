@@ -1,1 +1,0 @@
-export default function Home(){return <main style={{fontFamily:'Arial',margin:'4rem auto',maxWidth:600}}><h1>🚀 Crypto {'{Kurt}'} Ai</h1><p>RSI + Open Interest + Volume · Bybit · Telegram</p><p>API endpoints require authorization.</p></main>}
