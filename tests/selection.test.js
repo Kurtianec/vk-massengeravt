@@ -10,7 +10,7 @@ test('hot candidate includes volatile coin even at end of input',()=>{
 test('discovery rotates and eventually covers all eligible',()=>{
  const seen=new Set();
  for(let cycle=0;cycle<5;cycle++)for(let batch=0;batch<6;batch++){
-  const r=selectMarket(tickers,{batch,now:cycle*6*60000});r.selected.forEach(t=>seen.add(t.symbol));
+  const r=selectMarket(tickers,{batch,now:cycle*60000});r.selected.forEach(t=>seen.add(t.symbol));
  }
  assert.equal(seen.size,240);
 });
